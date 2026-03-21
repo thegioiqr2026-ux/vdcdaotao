@@ -3,164 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Fix Library Loading v2.2</title>
+    <title>VDC Đào tạo - Khắc phục Treo v2.3</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://open-xml-templating.github.io/docxtemplater-image-module/build/docxtemplater-image-module.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
         body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
-        .app-card { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--vdc-blue); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: var(--vdc-blue); color: white; padding: 10px; }
-        td { border: 1px solid #ddd; padding: 8px; }
-        .btn-group { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
-        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-front { background: var(--vdc-blue); color: white; }
-        .btn-back { background: var(--vdc-gold); color: white; }
-        .img-preview { width: 60px; height: 80px; object-fit: cover; border: 1px solid #ccc; display: block; margin-top: 5px; background: #eee; }
+        .app-card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); position: relative; }
+        
+        /* Hiển thị trạng thái tải */
+        #loading-zone { background: #fff3cd; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        .hidden { display: none !important; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-blue { background: var(--vdc-blue); }
+        .btn-gold { background: var(--vdc-gold); }
+        .img-box { width: 60px; height: 80px; background: #eee; border: 1px solid #ddd; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loading-overlay">Đang khởi tạo thư viện xử lý Word...</div>
-
 <div class="app-card">
-    <div style="float:right; font-size:12px">Build: 2026.03.21 | v2.2</div>
-    <h2 style="color:var(--vdc-blue); text-align:center">HỆ THỐNG IN THẺ VDC - VERSION 2.2</h2>
-    
-    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; font-size:14px">
-        <b>Hướng dẫn:</b> <br>
-        1. Chọn ảnh 3x4 cho từng học viên. <br>
-        2. File <b>Mattruoc.docx</b> phải có thẻ <b>{%Hinh_anh}</b>. <br>
-        3. File <b>Matsau.docx</b> phải có các thẻ như <b>{Họ_và_tên}</b>.
+    <div id="loading-zone">
+        <strong id="load-status">⏳ Đang khởi tạo thư viện xử lý Word...</strong>
+        <p style="font-size: 12px; margin-top: 5px;">Nếu bị treo quá lâu, vui lòng kiểm tra kết nối mạng.</p>
+        <button onclick="forceStart()" style="margin-top:10px; font-size:11px; cursor:pointer;">Ép chạy (Nếu F5 không được)</button>
     </div>
 
-    <table id="stTable">
-        <thead>
-            <tr>
-                <th>Họ tên & Thông tin</th>
-                <th width="25%">Ảnh 3x4 (Dán vào mặt trước)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    Tên: <input type="text" class="st-name" value="Nguyễn Minh Hòa" style="width:80%"><br>
-                    Ngày sinh: <input type="text" class="st-dob" value="01/01/1967" style="width:40%"> 
-                    Mã: <input type="text" class="st-code" value="VDC-N3-001" style="width:30%">
-                </td>
-                <td>
-                    <input type="file" accept="image/*" onchange="previewImg(this)">
-                    <img class="img-preview" src="">
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div id="main-app" class="hidden">
+        <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG IN THẺ VDC v2.3</h2>
+        
+        <div class="form-grid">
+            <div><label>Tên đơn vị</label><input type="text" id="comp" value="Công ty VDC"></div>
+            <div><label>Mã thẻ</label><input type="text" id="code" value="VDC-2026-01"></div>
+        </div>
 
-    <div class="btn-group">
-        <button class="btn btn-front" onclick="generateBatch('Mattruoc.docx')">XUẤT MẶT TRƯỚC (CÓ ẢNH)</button>
-        <button class="btn btn-back" onclick="generateBatch('Matsau.docx')">XUẤT MẶT SAU</button>
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:var(--vdc-blue); color:white;">
+                    <th style="padding:10px;">Học viên</th>
+                    <th>Ảnh 3x4</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:10px; border:1px solid #ddd;">
+                        <input type="text" id="name" value="Nguyễn Minh Hòa" style="margin-bottom:5px;"><br>
+                        <input type="text" id="dob" value="01/01/1967">
+                    </td>
+                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">
+                        <input type="file" accept="image/*" onchange="handleImg(this)">
+                        <img id="preview" class="img-box" src="">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="btn-group">
+            <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
+            <button class="btn btn-gold" onclick="processDoc('Matsau.docx')">XUẤT MẶT SAU</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Xử lý ảnh sang Base64
-    function previewImg(input) {
+    // Kiểm tra sự tồn tại của thư viện mỗi 1 giây
+    const checkInterval = setInterval(() => {
+        if (typeof window.PizZip !== 'undefined' && typeof window.docxtemplater !== 'undefined') {
+            document.getElementById('loading-zone').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            clearInterval(checkInterval);
+        }
+    }, 1000);
+
+    function forceStart() {
+        document.getElementById('loading-zone').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+    }
+
+    function handleImg(input) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            input.nextElementSibling.src = e.target.result;
-        };
+        reader.onload = (e) => document.getElementById('preview').src = e.target.result;
         if(input.files[0]) reader.readAsDataURL(input.files[0]);
     }
 
-    // Cấu hình Image Module
-    const imageOptions = {
-        getImage(tagValue) {
-            return b64ToUint8Array(tagValue.split(',')[1]);
-        },
-        getSize() {
-            return [113, 151]; // Kích thước xấp xỉ 3x4cm trong Word
-        }
-    };
-
-    function b64ToUint8Array(b64) {
-        const bin = window.atob(b64);
-        const len = bin.length;
-        const u8 = new Uint8Array(len);
-        for (let i = 0; i < len; i++) u8[i] = bin.charCodeAt(i);
-        return u8;
-    }
-
-    // Cơ chế kiểm tra thư viện trước khi chạy
-    async function checkLibs() {
-        return new Promise((resolve) => {
-            const check = () => {
-                if (typeof window.PizZip !== 'undefined' && typeof window.docxtemplater !== 'undefined') {
-                    resolve(true);
-                } else {
-                    setTimeout(check, 500);
-                }
-            };
-            check();
-        });
-    }
-
-    async function generateBatch(templateName) {
-        const loader = document.getElementById('loader');
-        loader.style.display = 'flex';
-
+    async function processDoc(templateName) {
         try {
-            await checkLibs(); // Chờ thư viện sẵn sàng
+            const resp = await fetch(templateName);
+            if (!resp.ok) throw new Error("Không tìm thấy file mẫu " + templateName);
+            const arrayBuffer = await resp.arrayBuffer();
 
-            const response = await fetch(templateName);
-            if (!response.ok) throw new Error(`Không tìm thấy file mẫu: ${templateName}`);
-            const content = await response.arrayBuffer();
+            const zip = new PizZip(arrayBuffer);
+            const imageOptions = {
+                getImage: (tag) => {
+                    const b64 = tag.split(',')[1];
+                    const bin = window.atob(b64);
+                    const res = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
+                    return res;
+                },
+                getSize: () => [113, 151] // 3x4cm
+            };
 
-            const zip = new PizZip(content);
-            const imageModule = new window.ImageModule(imageOptions);
-            const doc = new window.docxtemplater(zip, {
-                modules: [imageModule],
-                paragraphLoop: true,
-                linebreaks: true
-            });
+            const imgModule = new window.ImageModule(imageOptions);
+            const doc = new window.docxtemplater(zip, { modules: [imgModule] });
 
-            const rows = document.querySelectorAll("#stTable tbody tr");
-            const students = [];
-
-            rows.forEach(row => {
-                const imgSrc = row.querySelector(".img-preview").src;
-                students.push({
-                    Họ_và_tên: row.querySelector(".st-name").value,
-                    Sinh_ngày: row.querySelector(".st-dob").value,
-                    Mã_thẻ: row.querySelector(".st-code").value,
-                    Hinh_anh: imgSrc || "" // Gửi chuỗi Base64
-                });
-            });
-
-            // Đổ dữ liệu vào template theo cấu trúc Mail Merge
             doc.render({
-                Đơn_vị_: "CÔNG TY CP HTQT VDC",
-                Học_viên: students,
-                ...students[0] // Dành cho bản ghi đầu tiên
+                Đơn_vị_: document.getElementById('comp').value,
+                Họ_và_tên: document.getElementById('name').value,
+                Sinh_ngày: document.getElementById('dob').value,
+                Mã_thẻ: document.getElementById('code').value,
+                Hinh_anh: document.getElementById('preview').src // Chuỗi Base64
             });
 
-            const out = doc.getZip().generate({
-                type: "blob",
-                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            });
-
+            const out = doc.getZip().generate({ type: "blob" });
             saveAs(out, `Ket_qua_${templateName}`);
-
-        } catch (error) {
-            console.error(error);
-            alert("Lỗi: " + error.message);
-        } finally {
-            loader.style.display = 'none';
+        } catch (e) {
+            alert("Lỗi: " + e.message);
         }
     }
 </script>
