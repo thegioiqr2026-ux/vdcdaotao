@@ -3,212 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Xuất Hồ sơ Hàng loạt v1.6</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.2.2/index.umd.js"></script>
+    <title>VDC - In Thẻ An Toàn v1.8</title>
+    <script src="https://unpkg.com/docx@8.2.2/build/index.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
-        body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
-        .app-card { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .version-tag { float: right; font-size: 12px; color: #999; font-weight: bold; }
-        h2 { color: var(--vdc-blue); text-align: center; text-transform: uppercase; margin-bottom: 30px; }
-        .form-section { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; background: #fafafa; padding: 20px; border-radius: 5px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', serif; background: #f0f2f5; padding: 20px; }
+        .app-container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .version { float: right; font-size: 12px; color: #888; }
+        h2 { color: var(--vdc-blue); text-align: center; border-bottom: 2px solid var(--vdc-gold); padding-bottom: 10px; }
         
-        /* Student Table */
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: var(--vdc-blue); color: white; padding: 12px; font-size: 13px; }
-        td { border: 1px solid #ddd; padding: 8px; }
-        .input-inline { border: none; width: 100%; padding: 5px; outline: none; }
-        
-        .btn-group { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
-        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; }
-        .btn-add { background: #28a745; color: white; }
-        .btn-gcn { background: var(--vdc-gold); color: white; }
-        .btn-the { background: var(--vdc-blue); color: white; }
+        .setup-section { background: #fafafa; padding: 20px; border-radius: 5px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .setup-section label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
+        .setup-section input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th { background: var(--vdc-blue); color: white; padding: 10px; font-size: 12px; }
+        td { border: 1px solid #ddd; padding: 5px; }
+        .input-row { width: 100%; border: none; outline: none; padding: 5px; }
+
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-add { background: #28a745; }
+        .btn-front { background: var(--vdc-blue); }
+        .btn-back { background: var(--vdc-gold); }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <span class="version-tag">Dự án: VDC Đào tạo | v1.6</span>
-    <h2>Hệ thống Cấp chứng nhận & Thẻ an toàn</h2>
+<div class="app-container">
+    <span class="version">Version 1.8</span>
+    <h2>Hệ thống In Thẻ An Toàn VDC (Chuẩn 3x3)</h2>
 
-    <div class="form-section">
-        <div>
-            <label>Đơn vị tham gia (Công ty)</label>
-            <input type="text" id="companyName" placeholder="Tên khách hàng...">
-        </div>
-        <div>
-            <label>Ngày huấn luyện (Từ ngày)</label>
-            <input type="date" id="startDate">
-        </div>
-        <div>
-            <label>Đến ngày</label>
-            <input type="date" id="endDate">
-        </div>
-        <div>
-            <label>Số Quyết định (Nếu có)</label>
-            <input type="text" id="decisionNo" placeholder=".../2026/QĐ-VDC">
-        </div>
-        <div>
-            <label>Nhóm huấn luyện</label>
-            <select id="groupSelect">
-                <option value="1">Nhóm 1</option>
-                <option value="2">Nhóm 2</option>
-                <option value="3">Nhóm 3</option>
-                <option value="4">Nhóm 4</option>
-                <option value="5">Nhóm 5</option>
-                <option value="6">Nhóm 6</option>
-            </select>
-        </div>
-        <div>
-            <label>Thời hạn hiệu lực (Năm)</label>
-            <input type="number" id="expiryYears" value="2">
-        </div>
+    <div class="setup-section">
+        <div><label>Đơn vị cấp thẻ</label><input type="text" id="issuer" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC"></div>
+        <div><label>Nội dung huấn luyện</label><input type="text" id="course" value="An toàn vệ sinh lao động - Nhóm 3"></div>
+        <div><label>Địa điểm & Ngày cấp</label><input type="text" id="locDate" value="Thanh Hóa, ngày 21 tháng 03 năm 2026"></div>
+        <div><label>Từ ngày học</label><input type="date" id="sDate" value="2026-03-19"></div>
+        <div><label>Đến ngày học</label><input type="date" id="eDate" value="2026-03-20"></div>
+        <div><label>Thời hạn đến</label><input type="text" id="expiry" value="21/03/2028"></div>
     </div>
 
-    <div class="table-container">
-        <button class="btn btn-add" onclick="addRow()">+ Thêm dòng học viên</button>
-        <table id="studentTable">
-            <thead>
-                <tr>
-                    <th width="5%">STT</th>
-                    <th>Họ và tên</th>
-                    <th>Ngày sinh</th>
-                    <th>Số CMND / CCCD</th>
-                    <th>Chức vụ / Công việc</th>
-                    <th width="5%">Xóa</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="text-align:center">1</td>
-                    <td><input type="text" class="row-name input-inline"></td>
-                    <td><input type="text" class="row-dob input-inline" placeholder="dd/mm/yyyy"></td>
-                    <td><input type="text" class="row-id input-inline"></td>
-                    <td><input type="text" class="row-job input-inline"></td>
-                    <td><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">STT</th>
+                <th>Họ và tên</th>
+                <th>Năm sinh</th>
+                <th>Công việc</th>
+                <th>Mã thẻ</th>
+                <th width="5%">Xóa</th>
+            </tr>
+        </thead>
+        <tbody id="studentBody">
+            <tr>
+                <td align="center">1</td>
+                <td><input type="text" class="st-name input-row" value="Nguyễn Minh Hòa"></td>
+                <td><input type="text" class="st-dob input-row" value="01/01/1967"></td>
+                <td><input type="text" class="st-job input-row" value="Phòng M&E"></td>
+                <td><input type="text" class="st-code input-row" value="VDC-N3-001"></td>
+                <td align="center"><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>
+            </tr>
+        </tbody>
+    </table>
 
     <div class="btn-group">
-        <button class="btn btn-gcn" onclick="generateBatch('GCN')">Xuất Giấy chứng nhận hàng loạt</button>
-        <button class="btn btn-the" onclick="generateBatch('THE')">Xuất Thẻ an toàn hàng loạt</button>
+        <button class="btn btn-add" onclick="addRow()">+ Thêm Học Viên</button>
+        <button class="btn btn-front" onclick="exportCards('FRONT')">Xuất Mặt Trước (Chuẩn 3x3)</button>
+        <button class="btn btn-back" onclick="exportCards('BACK')">Xuất Mặt Sau (Chuẩn 3x3)</button>
     </div>
 </div>
 
 <script>
-    // Cập nhật Firebase Config mới [cite: 2025-12-16]
-    const firebaseConfig = {
-        apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
-        authDomain: "vdcdaotao-bb832.firebaseapp.com",
-        projectId: "vdcdaotao-bb832",
-        storageBucket: "vdcdaotao-bb832.firebasestorage.app",
-        messagingSenderId: "1033996249004",
-        appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
-        measurementId: "G-CJRQYVBQSW"
-    };
-    firebase.initializeApp(firebaseConfig);
-
     function addRow() {
-        const table = document.getElementById("studentTable").getElementsByTagName('tbody')[0];
-        const rowCount = table.rows.length + 1;
-        const row = table.insertRow(-1);
-        row.innerHTML = `
-            <td style="text-align:center">${rowCount}</td>
-            <td><input type="text" class="row-name input-inline"></td>
-            <td><input type="text" class="row-dob input-inline" placeholder="dd/mm/yyyy"></td>
-            <td><input type="text" class="row-id input-inline"></td>
-            <td><input type="text" class="row-job input-inline"></td>
-            <td><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>
-        `;
+        const body = document.getElementById("studentBody");
+        const count = body.rows.length + 1;
+        const row = body.insertRow(-1);
+        row.innerHTML = `<td align="center">${count}</td><td><input type="text" class="st-name input-row"></td><td><input type="text" class="st-dob input-row"></td><td><input type="text" class="st-job input-row"></td><td><input type="text" class="st-code input-row"></td><td align="center"><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>`;
     }
 
-    async function generateBatch(type) {
-        const { Document, Packer, Paragraph, TextRun, AlignmentType, PageBreak, Table, TableRow, TableCell, WidthType, BorderStyle } = window.docx;
-        const students = [];
-        const tableRows = document.querySelectorAll("#studentTable tbody tr");
-        
-        // Thông tin chung [cite: 311, 313]
-        const comp = document.getElementById("companyName").value || "..................";
-        const group = document.getElementById("groupSelect").value;
-        const sDate = document.getElementById("startDate").value || "..../..../....";
-        const eDate = document.getElementById("endDate").value || "..../..../....";
-        
-        tableRows.forEach(tr => {
-            const name = tr.querySelector(".row-name").value;
-            if(name) {
-                students.push({
-                    name: name,
-                    dob: tr.querySelector(".row-dob").value || "..../..../....",
-                    id: tr.querySelector(".row-id").value || "................",
-                    job: tr.querySelector(".row-job").value || "................"
-                });
+    async function exportCards(side) {
+        const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } = window.docx;
+        const students = Array.from(document.querySelectorAll("#studentBody tr")).map(tr => ({
+            name: tr.querySelector(".st-name").value,
+            dob: tr.querySelector(".st-dob").value,
+            job: tr.querySelector(".st-job").value,
+            code: tr.querySelector(".st-code").value
+        }));
+
+        const issuer = document.getElementById("issuer").value;
+        const course = document.getElementById("course").value;
+        const locDate = document.getElementById("locDate").value;
+        const sDate = document.getElementById("sDate").value;
+        const eDate = document.getElementById("eDate").value;
+        const expiry = document.getElementById("expiry").value;
+
+        // Xây dựng lưới 3x3
+        const tableRows = [];
+        for (let i = 0; i < 9; i += 3) {
+            const cells = [];
+            for (let j = 0; j < 3; j++) {
+                const st = students[i + j] || { name: "", dob: "", job: "", code: "" };
+                const cellContent = [];
+                
+                if (side === 'FRONT') { // Mặt trước [cite: 749]
+                    cellContent.push(
+                        new Paragraph({ children: [new TextRun({ text: issuer, bold: true, size: 16 })], alignment: AlignmentType.CENTER }),
+                        new Paragraph({ children: [new TextRun({ text: "THẺ AN TOÀN LAO ĐỘNG", bold: true, color: "FF0000", size: 18 })], alignment: AlignmentType.CENTER }),
+                        new Paragraph({ children: [new TextRun({ text: `Số: ${st.code}`, size: 14 })], alignment: AlignmentType.RIGHT }),
+                        new Paragraph({ text: "[Ảnh 3x4]", alignment: AlignmentType.LEFT }) // Placeholder cho ảnh
+                    );
+                } else { // Mặt sau [cite: 748]
+                    cellContent.push(
+                        new Paragraph({ children: [new TextRun({ text: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", bold: true, size: 14 })], alignment: AlignmentType.CENTER }),
+                        new Paragraph({ children: [new TextRun({ text: "Độc lập - Tự do - Hạnh phúc", size: 14 })], alignment: AlignmentType.CENTER }),
+                        new Paragraph({ children: [new TextRun({ text: "THẺ AN TOÀN LAO ĐỘNG", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 100 } }),
+                        new Paragraph({ children: [new TextRun({ text: `Họ và tên: ${st.name}`, bold: true })] }),
+                        new Paragraph({ children: [new TextRun({ text: `Năm sinh: ${st.dob}` })] }),
+                        new Paragraph({ children: [new TextRun({ text: `Công việc: ${st.job}` })] }),
+                        new Paragraph({ children: [new TextRun({ text: `Nội dung HL: ${course}` })] }),
+                        new Paragraph({ children: [new TextRun({ text: `Thời hạn: ${expiry}`, bold: true })] })
+                    );
+                }
+
+                cells.push(new TableCell({
+                    children: cellContent,
+                    width: { size: 33, type: WidthType.PERCENTAGE },
+                    borders: { top: {style: BorderStyle.DASH_SMALL}, bottom: {style: BorderStyle.DASH_SMALL}, left: {style: BorderStyle.DASH_SMALL}, right: {style: BorderStyle.DASH_SMALL} },
+                    padding: { top: 200, bottom: 200, left: 200, right: 200 }
+                }));
             }
+            tableRows.push(new TableRow({ children: cells, height: { value: 3000, rule: "exact" } }));
+        }
+
+        const doc = new Document({
+            sections: [{
+                properties: { page: { margin: { top: 500, bottom: 500, left: 500, right: 500 } } },
+                children: [new Table({ rows: tableRows, width: { size: 100, type: WidthType.PERCENTAGE } })]
+            }]
         });
 
-        if (students.length === 0) { alert("Vui lòng nhập ít nhất một học viên!"); return; }
-
-        const content = [];
-        students.forEach((st, i) => {
-            if (type === 'GCN') {
-                // Mẫu Giấy Chứng Nhận [cite: 647, 655, 660]
-                content.push(
-                    new Paragraph({ children: [new TextRun({ text: "CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC", bold: true, size: 24 })], alignment: AlignmentType.CENTER }),
-                    new Paragraph({ children: [new TextRun({ text: "GIẤY CHỨNG NHẬN HUẤN LUYỆN", bold: true, size: 44 })], alignment: AlignmentType.CENTER, spacing: { before: 400 } }),
-                    new Paragraph({ children: [new TextRun({ text: "AN TOÀN, VỆ SINH LAO ĐỘNG", bold: true, size: 32 })], alignment: AlignmentType.CENTER, spacing: { after: 600 } }),
-                    
-                    new Paragraph({ children: [new TextRun({ text: `Họ và tên: ${st.name}`, bold: true, size: 28 })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Ngày sinh: ${st.dob}` })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Số CMND/CCCD: ${st.id}` })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Đối tượng huấn luyện: Nhóm ${group}` })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Đơn vị công tác: ${comp}` })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Đã hoàn thành khóa huấn luyện từ ngày ${sDate} đến ngày ${eDate}` })] }),
-                    new Paragraph({ children: [new TextRun({ text: `Kết quả: Khá`, italic: true })], spacing: { after: 800 } }),
-                    
-                    new Paragraph({ children: [new TextRun({ text: "Thanh Hóa, ngày .... tháng .... năm 20...", italic: true })], alignment: AlignmentType.RIGHT }),
-                    new Paragraph({ children: [new TextRun({ text: "TỔNG GIÁM ĐỐC", bold: true })], alignment: AlignmentType.RIGHT })
-                );
-            } else {
-                // Mẫu Thẻ An Toàn [cite: 687, 689, 336]
-                content.push(
-                    new Table({
-                        width: { size: 100, type: WidthType.PERCENTAGE },
-                        rows: [
-                            new TableRow({
-                                children: [
-                                    new TableCell({
-                                        children: [
-                                            new Paragraph({ children: [new TextRun({ text: "THẺ AN TOÀN LAO ĐỘNG", bold: true, size: 24 })], alignment: AlignmentType.CENTER }),
-                                            new Paragraph({ children: [new TextRun({ text: `Họ tên: ${st.name}`, bold: true })] }),
-                                            new Paragraph({ children: [new TextRun({ text: `Công việc: ${st.job}` })] }),
-                                            new Paragraph({ children: [new TextRun({ text: `Đơn vị: ${comp}` })] }),
-                                            new Paragraph({ children: [new TextRun({ text: `Nhóm huấn luyện: ${group}` })] }),
-                                            new Paragraph({ children: [new TextRun({ text: "Thời hạn: 02 năm", size: 18, italic: true })] })
-                                        ],
-                                        padding: { top: 200, bottom: 200, left: 200, right: 200 },
-                                        borders: { top: {style: BorderStyle.SINGLE}, bottom: {style: BorderStyle.SINGLE}, left: {style: BorderStyle.SINGLE}, right: {style: BorderStyle.SINGLE} }
-                                    })
-                                ]
-                            })
-                        ]
-                    })
-                );
-            }
-            if (i < students.length - 1) content.push(new Paragraph({ children: [new PageBreak()] }));
-        });
-
-        const doc = new Document({ sections: [{ children: content }] });
         const blob = await Packer.toBlob(doc);
-        saveAs(blob, `Hồ_sơ_VDC_Batch_${comp}.docx`);
+        saveAs(blob, `The_An_Toan_VDC_${side}.docx`);
     }
 </script>
 </body>
