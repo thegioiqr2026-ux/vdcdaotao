@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Fix PizZip & Image v2.1</title>
+    <title>VDC Đào tạo - Fix Library Loading v2.2</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
@@ -14,7 +14,7 @@
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
         body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
         .app-card { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .status-msg { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; font-size: 14px; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 1000; justify-content: center; align-items: center; font-weight: bold; color: var(--vdc-blue); }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: var(--vdc-blue); color: white; padding: 10px; }
         td { border: 1px solid #ddd; padding: 8px; }
@@ -22,33 +22,37 @@
         .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-front { background: var(--vdc-blue); color: white; }
         .btn-back { background: var(--vdc-gold); color: white; }
-        .img-preview { width: 40px; height: 50px; object-fit: cover; border: 1px solid #ccc; display: block; margin-top: 5px; }
+        .img-preview { width: 60px; height: 80px; object-fit: cover; border: 1px solid #ccc; display: block; margin-top: 5px; background: #eee; }
     </style>
 </head>
 <body>
 
+<div id="loader" class="loading-overlay">Đang khởi tạo thư viện xử lý Word...</div>
+
 <div class="app-card">
-    <div style="float:right; font-size:12px">v2.1</div>
-    <h2 style="color:var(--vdc-blue); text-align:center">HỆ THỐNG XUẤT THẺ VDC (FIX PIZZIP)</h2>
+    <div style="float:right; font-size:12px">Build: 2026.03.21 | v2.2</div>
+    <h2 style="color:var(--vdc-blue); text-align:center">HỆ THỐNG IN THẺ VDC - VERSION 2.2</h2>
     
-    <div class="status-msg">
-        Lưu ý: Đảm bảo file <b>Mattruoc.docx</b> có thẻ <b>{%Hinh_anh}</b> và <b>Matsau.docx</b> có các thẻ <b>{Họ_và_tên}</b>.
+    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; font-size:14px">
+        <b>Hướng dẫn:</b> <br>
+        1. Chọn ảnh 3x4 cho từng học viên. <br>
+        2. File <b>Mattruoc.docx</b> phải có thẻ <b>{%Hinh_anh}</b>. <br>
+        3. File <b>Matsau.docx</b> phải có các thẻ như <b>{Họ_và_tên}</b>.
     </div>
 
     <table id="stTable">
         <thead>
             <tr>
-                <th>Họ tên</th>
-                <th>Thông tin thẻ</th>
-                <th width="20%">Ảnh 3x4</th>
+                <th>Họ tên & Thông tin</th>
+                <th width="25%">Ảnh 3x4 (Dán vào mặt trước)</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><input type="text" class="st-name" value="Nguyễn Minh Hòa" style="width:95%"></td>
                 <td>
-                    Mã: <input type="text" class="st-code" value="VDC-N3-001"><br>
-                    Ngày: <input type="text" class="st-dob" value="01/01/1967">
+                    Tên: <input type="text" class="st-name" value="Nguyễn Minh Hòa" style="width:80%"><br>
+                    Ngày sinh: <input type="text" class="st-dob" value="01/01/1967" style="width:40%"> 
+                    Mã: <input type="text" class="st-code" value="VDC-N3-001" style="width:30%">
                 </td>
                 <td>
                     <input type="file" accept="image/*" onchange="previewImg(this)">
@@ -65,22 +69,22 @@
 </div>
 
 <script>
-    // Xử lý xem trước và lưu Base64 ảnh
+    // Xử lý ảnh sang Base64
     function previewImg(input) {
         const reader = new FileReader();
         reader.onload = function(e) {
             input.nextElementSibling.src = e.target.result;
         };
-        reader.readAsDataURL(input.files[0]);
+        if(input.files[0]) reader.readAsDataURL(input.files[0]);
     }
 
-    // Cấu hình Image Module cho docxtemplater
+    // Cấu hình Image Module
     const imageOptions = {
         getImage(tagValue) {
             return b64ToUint8Array(tagValue.split(',')[1]);
         },
         getSize() {
-            return [113, 151]; // Tương đương ảnh 3x4 cm trong Word
+            return [113, 151]; // Kích thước xấp xỉ 3x4cm trong Word
         }
     };
 
@@ -92,15 +96,29 @@
         return u8;
     }
 
+    // Cơ chế kiểm tra thư viện trước khi chạy
+    async function checkLibs() {
+        return new Promise((resolve) => {
+            const check = () => {
+                if (typeof window.PizZip !== 'undefined' && typeof window.docxtemplater !== 'undefined') {
+                    resolve(true);
+                } else {
+                    setTimeout(check, 500);
+                }
+            };
+            check();
+        });
+    }
+
     async function generateBatch(templateName) {
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+
         try {
-            // Kiểm tra thư viện
-            if (typeof window.PizZip === 'undefined') {
-                throw new Error("Thư viện PizZip chưa tải xong. Vui lòng kiểm tra internet và F5 trang.");
-            }
+            await checkLibs(); // Chờ thư viện sẵn sàng
 
             const response = await fetch(templateName);
-            if (!response.ok) throw new Error(`Không tìm thấy file ${templateName} trong thư mục.`);
+            if (!response.ok) throw new Error(`Không tìm thấy file mẫu: ${templateName}`);
             const content = await response.arrayBuffer();
 
             const zip = new PizZip(content);
@@ -115,20 +133,20 @@
             const students = [];
 
             rows.forEach(row => {
+                const imgSrc = row.querySelector(".img-preview").src;
                 students.push({
                     Họ_và_tên: row.querySelector(".st-name").value,
                     Sinh_ngày: row.querySelector(".st-dob").value,
                     Mã_thẻ: row.querySelector(".st-code").value,
-                    Hinh_anh: row.querySelector(".img-preview").src // Chuỗi Base64
+                    Hinh_anh: imgSrc || "" // Gửi chuỗi Base64
                 });
             });
 
-            // Đổ dữ liệu vào template
+            // Đổ dữ liệu vào template theo cấu trúc Mail Merge
             doc.render({
                 Đơn_vị_: "CÔNG TY CP HTQT VDC",
                 Học_viên: students,
-                // Map dữ liệu cho bản ghi đầu tiên (nếu template không dùng loop)
-                ...students[0]
+                ...students[0] // Dành cho bản ghi đầu tiên
             });
 
             const out = doc.getZip().generate({
@@ -141,6 +159,8 @@
         } catch (error) {
             console.error(error);
             alert("Lỗi: " + error.message);
+        } finally {
+            loader.style.display = 'none';
         }
     }
 </script>
