@@ -3,49 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC - Manual Picker v3.4</title>
+    <title>VDC - Fix Element v3.5</title>
     <script src="pizzip.min.js"></script>
     <script src="docxtemplater.min.js"></script>
     <script src="imagemodule.min.js"></script>
     <script src="FileSaver.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
-        .card { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #d4a017; }
-        .zone { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #003366; }
+        body { font-family: 'Times New Roman', serif; padding: 20px; background: #f0f2f5; }
+        .card { max-width: 850px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #d4a017; }
+        .zone { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #003366; }
         input[type="text"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #003366; color: white; }
-        .btn { padding: 15px; background: #003366; color: white; border: none; cursor: pointer; font-weight: bold; width: 100%; border-radius: 5px; font-size: 16px; margin-top: 15px; }
-        .img-preview { width: 60px; height: 80px; object-fit: cover; border: 2px solid #ddd; display: block; margin: auto; background: #eee; }
+        .btn { padding: 15px; background: #003366; color: white; border: none; cursor: pointer; font-weight: bold; width: 100%; border-radius: 5px; font-size: 16px; margin-top: 10px; }
+        .img-preview { width: 60px; height: 80px; object-fit: cover; border: 1px solid #ccc; display: block; margin: auto; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2 style="text-align:center; color:#003366; margin-top:0;">HỆ THỐNG XUẤT THẺ VDC (v3.4)</h2>
+    <h2 style="text-align:center; color:#003366;">HỆ THỐNG XUẤT THẺ VDC (v3.5)</h2>
     
     <div class="zone">
-        <label><b>1. Chọn phôi Word (Mattruoc.docx):</b></label><br>
+        <label><b>1. Chọn phôi Word từ máy tính:</b></label><br>
         <input type="file" id="wordTemplate" accept=".docx" style="margin-top:10px;">
     </div>
 
     <div class="zone">
-        <label><b>2. Chọn thư mục ảnh nhân viên:</b></label><br>
+        <label><b>2. Chọn thư mục ảnh:</b></label><br>
         <input type="file" id="imgFolder" webkitdirectory directory multiple onchange="loadImages(event)" style="margin-top:10px;">
-        <div id="imgStatus" style="margin-top:5px; color:#28a745; font-weight:bold;">Chưa nạp ảnh</div>
+        <div id="imgStatus" style="margin-top:5px; color:green; font-weight:bold;">Chưa nạp ảnh</div>
     </div>
     
     <div class="zone">
-        <label><b>3. Thông tin chung:</b></label>
+        <label><b>3. Tên đơn vị:</b></label>
         <input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC">
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Họ tên học viên</th>
+                <th>Họ tên</th>
                 <th>Số CCCD</th>
-                <th>Ảnh xem trước</th>
+                <th>Ảnh</th>
             </tr>
         </thead>
         <tbody id="stBody">
@@ -57,7 +57,7 @@
         </tbody>
     </table>
 
-    <button class="btn" onclick="processDoc()">🚀 BẤM ĐỂ XUẤT FILE WORD</button>
+    <button class="btn" onclick="processDoc()">🚀 XUẤT FILE WORD NGAY</button>
 </div>
 
 <script>
@@ -71,7 +71,7 @@
                 const name = file.name.split('.')[0];
                 imageDictionary[name] = e.target.result;
                 count++;
-                document.getElementById('imgStatus').innerText = `Đã nạp thành công: ${count} ảnh`;
+                document.getElementById('imgStatus').innerText = `Đã nạp: ${count} ảnh`;
                 document.querySelectorAll('.st-cccd').forEach(input => matchImage(input));
             };
             reader.readAsDataURL(file);
@@ -86,13 +86,14 @@
 
     async function processDoc() {
         const fileInput = document.getElementById('wordTemplate');
-        if (!fileInput.files[0]) { alert("Vui lòng chọn file phôi Word trước!"); return; }
+        if (!fileInput.files[0]) { alert("Vui lòng chọn file phôi Word!"); return; }
 
         const reader = new FileReader();
         reader.onload = async function(e) {
             try {
-                const arrayBuffer = e.target.result;
-                const zip = new PizZip(arrayBuffer);
+                const zip = new PizZip(e.target.result);
+                
+                // --- ĐOẠN MÃ SỬA LỖI NAMESPACEURI ---
                 const doc = new window.docxtemplater(zip, { 
                     modules: [new (window.ImageModule || window.docxtemplaterImageModuleFree)({
                         getImage: (v) => {
@@ -103,18 +104,20 @@
                         },
                         getSize: () => [113, 151]
                     })],
-                    nullGetter: () => ""
+                    nullGetter: () => "",
+                    paragraphLoop: true,
+                    linebreaks: true
                 });
 
                 const rows = document.querySelectorAll("#stBody tr");
                 const finalData = {};
-                const dvChung = document.getElementById('comp').value;
+                const dv = document.getElementById('comp').value;
                 
                 for (let i = 1; i <= 9; i++) {
                     const row = rows[i-1];
                     if (row) {
                         const cccd = row.querySelector(".st-cccd").value.trim();
-                        finalData[`p${i}dv`] = dvChung;
+                        finalData[`p${i}dv`] = dv;
                         finalData[`p${i}ma`] = cccd;
                         finalData[`p${i}anh`] = imageDictionary[cccd] || "";
                     } else {
@@ -123,8 +126,12 @@
                 }
 
                 doc.render(finalData);
-                saveAs(doc.getZip().generate({ type: "blob" }), "The_VDC_Thanh_Cong.docx");
-            } catch (err) { alert("Lỗi xử lý: " + err.message); }
+                const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+                saveAs(out, "Ket_Qua_VDC.docx");
+            } catch (err) { 
+                console.error(err);
+                alert("Lỗi hệ thống: " + err.message + "\n\nLời khuyên: Hãy thử mở file Word, nhấn Ctrl+A rồi nhấn Ctrl+Space để xóa định dạng trước khi tải lên."); 
+            }
         };
         reader.readAsArrayBuffer(fileInput.files[0]);
     }
