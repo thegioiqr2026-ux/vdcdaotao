@@ -3,90 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Fix Image Module v2.4</title>
+    <title>VDC Đào tạo - In Lưới 3x3 v2.5</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
-    
     <script src="https://unpkg.com/docxtemplater-image-module-free@1.1.1/build/docxtemplater-image-module-free.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
         body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
-        .app-card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .app-card { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 5px; }
+        label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px;}
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: var(--vdc-blue); color: white; padding: 10px; font-size: 14px;}
+        td { border: 1px solid #ddd; padding: 8px; }
+        .input-row { width: 100%; border: none; outline: none; padding: 5px; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
+        .btn-add { background: #28a745; }
         .btn-blue { background: var(--vdc-blue); }
         .btn-gold { background: var(--vdc-gold); }
-        .img-box { width: 60px; height: 80px; background: #eee; border: 1px solid #ddd; margin-top: 5px; object-fit: cover; }
+        .btn:hover { opacity: 0.9; }
+        .img-box { width: 45px; height: 60px; background: #eee; border: 1px solid #ddd; display: block; object-fit: cover; margin-top: 5px;}
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div style="float:right; font-size:12px">Build: 2026.03.21 | v2.4</div>
-    <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG IN THẺ VDC v2.4</h2>
+    <div style="float:right; font-size:12px">Build: 2026.03.21 | v2.5</div>
+    <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG XUẤT THẺ LƯỚI 3x3</h2>
 
-    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; font-size:14px">
-        <b>Lưu ý:</b> File <b>Mattruoc.docx</b> phải dùng thẻ <b>{%Hinh_anh}</b> để chèn ảnh.
-    </div>
-    
     <div class="form-grid">
-        <div><label>Tên đơn vị</label><input type="text" id="comp" value="Công ty VDC"></div>
-        <div><label>Mã thẻ</label><input type="text" id="code" value="VDC-2026-01"></div>
+        <div style="grid-column: span 2;"><label>Tên đơn vị</label><input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC"></div>
+        <div><label>Nội dung HL</label><input type="text" id="course" value="An toàn vệ sinh lao động"></div>
+        <div><label>Địa điểm cấp</label><input type="text" id="loc" value="Thanh Hóa"></div>
+        <div><label>Từ ngày</label><input type="text" id="sDate" value="19/03/2026"></div>
+        <div><label>Đến ngày</label><input type="text" id="eDate" value="20/03/2026"></div>
+        <div><label>Ngày cấp</label><input type="text" id="issueDate" value="21/03/2026"></div>
+        <div><label>Thời hạn đến</label><input type="text" id="expiry" value="21/03/2028"></div>
     </div>
 
-    <table style="width:100%; border-collapse:collapse;">
+    <button class="btn btn-add" onclick="addRow()">+ Thêm học viên</button>
+    <table id="stTable">
         <thead>
-            <tr style="background:var(--vdc-blue); color:white;">
-                <th style="padding:10px;">Học viên</th>
-                <th>Ảnh 3x4</th>
+            <tr>
+                <th width="20%">Họ và tên</th>
+                <th width="15%">Năm sinh</th>
+                <th width="20%">Công việc</th>
+                <th width="20%">Mã thẻ</th>
+                <th width="20%">Ảnh 3x4</th>
+                <th width="5%">Xóa</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td style="padding:10px; border:1px solid #ddd;">
-                    <input type="text" id="name" value="Nguyễn Minh Hòa" style="margin-bottom:5px;"><br>
-                    <input type="text" id="dob" value="01/01/1967">
+                <td><input type="text" class="st-name input-row" value="Nguyễn Minh Hòa"></td>
+                <td><input type="text" class="st-dob input-row" value="01/01/1967"></td>
+                <td><input type="text" class="st-job input-row" value="Phòng M&E"></td>
+                <td><input type="text" class="st-code input-row" value="VDC-N3-001"></td>
+                <td align="center">
+                    <input type="file" accept="image/*" style="font-size:11px" onchange="handleImg(this)">
+                    <img class="img-preview img-box" src="">
                 </td>
-                <td style="padding:10px; border:1px solid #ddd; text-align:center;">
-                    <input type="file" accept="image/*" onchange="handleImg(this)">
-                    <img id="preview" class="img-box" src="">
-                </td>
+                <td align="center"><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>
             </tr>
         </tbody>
     </table>
 
     <div class="btn-group">
-        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC (CÓ ẢNH)</button>
+        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
         <button class="btn btn-gold" onclick="processDoc('Matsau.docx')">XUẤT MẶT SAU</button>
     </div>
 </div>
 
 <script>
+    function addRow() {
+        const tbody = document.querySelector("#stTable tbody");
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" class="st-name input-row"></td>
+            <td><input type="text" class="st-dob input-row"></td>
+            <td><input type="text" class="st-job input-row"></td>
+            <td><input type="text" class="st-code input-row"></td>
+            <td align="center"><input type="file" accept="image/*" style="font-size:11px" onchange="handleImg(this)"><img class="img-preview img-box" src=""></td>
+            <td align="center"><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>`;
+        tbody.appendChild(row);
+    }
+
     function handleImg(input) {
         const reader = new FileReader();
-        reader.onload = (e) => document.getElementById('preview').src = e.target.result;
+        reader.onload = (e) => input.nextElementSibling.src = e.target.result;
         if(input.files[0]) reader.readAsDataURL(input.files[0]);
+    }
+
+    // Xử lý các tag rỗng không bị in ra chữ "undefined"
+    function nullGetter(part) {
+        if (!part.module) return "";
+        if (part.module === "rawxml") return "";
+        return "";
     }
 
     async function processDoc(templateName) {
         try {
-            // Tải file mẫu
             const resp = await fetch(templateName);
             if (!resp.ok) throw new Error("Không tìm thấy file mẫu: " + templateName);
             const arrayBuffer = await resp.arrayBuffer();
-
             const zip = new PizZip(arrayBuffer);
 
-            // Cấu hình Image Module tương thích với bản docxtemplater-image-module-free
+            // Cấu hình Image Module với Pixel trong suốt để chống lỗi vỡ file
             const imageOptions = {
                 getImage: function(tagValue) {
                     if (!tagValue || !tagValue.startsWith('data:image')) {
-                        return new Uint8Array(0); // Trả về ảnh rỗng nếu không có dữ liệu để tránh crash
+                        // Trả về ảnh pixel trong suốt 1x1 nếu học viên không có ảnh
+                        const emptyB64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+                        const bin = window.atob(emptyB64);
+                        const res = new Uint8Array(bin.length);
+                        for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
+                        return res;
                     }
                     const b64 = tagValue.split(',')[1];
                     const bin = window.atob(b64);
@@ -94,32 +130,56 @@
                     for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
                     return res;
                 },
-                getSize: function() {
-                    return [113, 151]; // Kích thước xấp xỉ 3x4cm
-                }
+                getSize: () => [113, 151] // 3x4cm
             };
 
-            // Tìm và sử dụng đúng đối tượng Constructor của thư viện
             const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
-            if (!ImgModule) {
-                throw new Error("Thư viện xử lý ảnh chưa tải xong hoặc bị lỗi kết nối.");
-            }
-
             const imgModule = new ImgModule(imageOptions);
+
             const doc = new window.docxtemplater(zip, { 
                 modules: [imgModule],
                 paragraphLoop: true,
-                linebreaks: true 
+                linebreaks: true,
+                nullGetter: nullGetter
             });
 
-            // Đổ dữ liệu
-            doc.render({
+            // Lấy thông tin chung
+            const commonData = {
                 Đơn_vị_: document.getElementById('comp').value,
-                Họ_và_tên: document.getElementById('name').value,
-                Sinh_ngày: document.getElementById('dob').value,
-                Mã_thẻ: document.getElementById('code').value,
-                Hinh_anh: document.getElementById('preview').src // Lấy chuỗi Base64 từ thẻ <img>
+                Nội_dung_HL: document.getElementById('course').value,
+                Từ_ngày: document.getElementById('sDate').value,
+                Đến_ngày: document.getElementById('eDate').value,
+                Địa_điểm_công_ty: document.getElementById('loc').value,
+                Ngày_cấp: document.getElementById('issueDate').value,
+                Thời_hạn_thẻ_GCN: document.getElementById('expiry').value
+            };
+
+            // Lấy danh sách học viên
+            const rows = document.querySelectorAll("#stTable tbody tr");
+            const students = [];
+            rows.forEach(row => {
+                students.push({
+                    ...commonData,
+                    Họ_và_tên: row.querySelector(".st-name").value,
+                    Sinh_ngày: row.querySelector(".st-dob").value,
+                    Công_việc: row.querySelector(".st-job").value,
+                    Mã_thẻ: row.querySelector(".st-code").value,
+                    Hinh_anh: row.querySelector(".img-preview").src
+                });
             });
+
+            // Nhóm 9 học viên vào 1 Trang (Page)
+            const pages = [];
+            for (let i = 0; i < students.length; i += 9) {
+                const pageObj = {};
+                for (let j = 0; j < 9; j++) {
+                    pageObj[`p${j+1}`] = students[i + j] || { ...commonData, Họ_và_tên: "", Sinh_ngày: "", Công_việc: "", Mã_thẻ: "", Hinh_anh: "" };
+                }
+                pages.push(pageObj);
+            }
+
+            // Đổ dữ liệu vào tag {#Pages}
+            doc.render({ Pages: pages });
 
             const out = doc.getZip().generate({ type: "blob" });
             saveAs(out, `Ket_qua_${templateName}`);
