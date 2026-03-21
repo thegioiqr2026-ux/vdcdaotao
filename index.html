@@ -3,127 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Error Decoder v2.12</title>
+    <title>VDC Đào tạo - Final Sync v3.1</title>
     
     <script src="pizzip.min.js"></script>
     <script src="docxtemplater.min.js"></script>
     <script src="imagemodule.min.js"></script>
     <script src="FileSaver.min.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
         body { font-family: 'Times New Roman', serif; background: #f0f2f5; padding: 20px; }
         .app-card { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .setup-zone { background: #e8f4fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px dashed var(--vdc-blue); }
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; color: #333;}
         input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background: var(--vdc-blue); color: white; padding: 10px; font-size: 14px;}
         td { border: 1px solid #ddd; padding: 8px; vertical-align: middle; }
-        .input-row { width: 100%; border: none; outline: none; padding: 5px; font-family: 'Times New Roman'; font-size: 14px;}
+        .input-row { width: 100%; border: none; outline: none; padding: 5px; font-size: 14px;}
         .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;}
-        .btn-add { background: #28a745; margin-bottom: 10px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
         .btn-blue { background: var(--vdc-blue); }
         .btn-gold { background: var(--vdc-gold); }
-        .btn:hover { opacity: 0.9; }
-        .img-box { width: 45px; height: 60px; background: #f9f9f9; border: 1px solid #ddd; display: block; object-fit: cover; margin: 0 auto;}
-        .folder-upload { background: white; padding: 10px; border-radius: 4px; cursor: pointer; border: 1px solid var(--vdc-blue); color: var(--vdc-blue); font-weight: bold; }
+        .img-box { width: 45px; height: 60px; background: #f9f9f9; border: 1px solid #ddd; object-fit: cover; margin: 0 auto; display: block;}
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div style="float:right; font-size:12px; color:#888;">Version 2.12 (Error Decoder)</div>
-    <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG XUẤT THẺ TỰ ĐỘNG GHÉP ẢNH</h2>
+    <div style="float:right; font-size:12px; color:#888;">Version 3.1</div>
+    <h2 style="color:var(--vdc-blue); text-align:center;">HỆ THỐNG XUẤT THẺ VDC</h2>
 
-    <div class="setup-zone">
-        <div>
-            <h4 style="margin: 0 0 5px 0; color: var(--vdc-blue);">Bước 1: Tải lên thư mục ảnh</h4>
-            <span style="font-size: 13px; color: #555;">(Yêu cầu: Đổi tên file ảnh thành số CCCD của học viên, VD: <b>079069011376.jpg</b>)</span>
-        </div>
-        <div style="text-align: right;">
-            <label class="folder-upload">
-                <input type="file" id="imgFolder" webkitdirectory directory multiple style="display: none;" onchange="loadImages(event)">
-                📁 CHỌN THƯ MỤC ẢNH
-            </label>
-            <div id="imgStatus" style="margin-top: 8px; font-size: 13px; font-weight: bold; color: #28a745;">Đã nạp: 0 ảnh</div>
-        </div>
+    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; border:1px dashed var(--vdc-blue);">
+        <label style="font-weight:bold;">📁 BƯỚC 1: CHỌN THƯ MỤC ẢNH (Tên file = CCCD)</label>
+        <input type="file" id="imgFolder" webkitdirectory directory multiple onchange="loadImages(event)" style="margin-top:10px;">
+        <div id="imgStatus" style="margin-top:5px; color:green; font-weight:bold;">Đã nạp: 0 ảnh</div>
     </div>
 
     <div class="form-grid">
         <div style="grid-column: span 2;"><label>Tên đơn vị</label><input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC"></div>
-        <div><label>Nội dung HL</label><input type="text" id="course" value="An toàn vệ sinh lao động - Nhóm 3"></div>
-        <div><label>Địa điểm</label><input type="text" id="loc" value="Thanh Hóa"></div>
-        <div><label>Từ ngày</label><input type="text" id="sDate" value="19/03/2026"></div>
-        <div><label>Đến ngày</label><input type="text" id="eDate" value="20/03/2026"></div>
+        <div><label>Nội dung HL</label><input type="text" id="course" value="An toàn vệ sinh lao động"></div>
         <div><label>Ngày cấp</label><input type="text" id="issueDate" value="21/03/2026"></div>
-        <div><label>Thời hạn đến</label><input type="text" id="expiry" value="21/03/2028"></div>
     </div>
 
-    <button class="btn btn-add" onclick="addRow()">+ Thêm học viên</button>
     <table id="stTable">
         <thead>
             <tr>
                 <th width="5%">STT</th>
-                <th width="25%">Họ và tên</th>
-                <th width="15%">Năm sinh</th>
-                <th width="20%">Công việc</th>
-                <th width="20%">Số CCCD (Mã thẻ)</th>
-                <th width="10%">Ảnh tự động</th>
-                <th width="5%">Xóa</th>
+                <th width="30%">Họ và tên</th>
+                <th width="30%">Số CCCD (Mã thẻ)</th>
+                <th width="20%">Ảnh</th>
+                <th width="15%">Thao tác</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td align="center" class="row-num">1</td>
+                <td align="center">1</td>
                 <td><input type="text" class="st-name input-row" value="Nguyễn Minh Hòa"></td>
-                <td><input type="text" class="st-dob input-row" value="01/01/1967"></td>
-                <td><input type="text" class="st-job input-row" value="Phòng M&E"></td>
                 <td><input type="text" class="st-cccd input-row" value="079069011376" onkeyup="matchImage(this)"></td>
-                <td align="center"><img class="img-preview img-box" src=""></td>
-                <td align="center"><button onclick="this.parentElement.parentElement.remove(); updateRowNums();" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>
+                <td><img class="img-preview img-box" src=""></td>
+                <td align="center"><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>
             </tr>
         </tbody>
     </table>
+    
+    <button onclick="addRow()" style="margin-top:10px;">+ Thêm dòng</button>
 
     <div class="btn-group">
-        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC (TỰ GHÉP ẢNH)</button>
-        <button class="btn btn-gold" onclick="processDoc('Matsau.docx')">XUẤT MẶT SAU</button>
+        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
-        authDomain: "vdcdaotao-bb832.firebaseapp.com",
-        projectId: "vdcdaotao-bb832",
-        storageBucket: "vdcdaotao-bb832.firebasestorage.app",
-        messagingSenderId: "1033996249004",
-        appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
-        measurementId: "G-CJRQYVBQSW"
-    };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-
     let imageDictionary = {};
 
     function loadImages(event) {
         const files = event.target.files;
         let count = 0;
-        imageDictionary = {}; 
-        
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const fileNameClean = file.name.substring(0, file.name.lastIndexOf('.'));
-                    imageDictionary[fileNameClean] = e.target.result;
+                    const name = file.name.substring(0, file.name.lastIndexOf('.'));
+                    imageDictionary[name] = e.target.result;
                     count++;
                     document.getElementById('imgStatus').innerText = `Đã nạp: ${count} ảnh`;
                     document.querySelectorAll('.st-cccd').forEach(input => matchImage(input));
@@ -133,122 +94,59 @@
         });
     }
 
-    function matchImage(inputEl) {
-        const cccd = inputEl.value.trim();
-        const imgEl = inputEl.closest('tr').querySelector('.img-preview');
-        if (imageDictionary[cccd]) {
-            imgEl.src = imageDictionary[cccd]; 
-        } else {
-            imgEl.src = ""; 
-        }
+    function matchImage(input) {
+        const cccd = input.value.trim();
+        const img = input.closest('tr').querySelector('.img-preview');
+        img.src = imageDictionary[cccd] || "";
     }
 
     function addRow() {
-        const tbody = document.querySelector("#stTable tbody");
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td align="center" class="row-num"></td>
+        const tb = document.querySelector("#stTable tbody");
+        const nr = tb.insertRow();
+        nr.innerHTML = `<td align="center">${tb.rows.length}</td>
             <td><input type="text" class="st-name input-row"></td>
-            <td><input type="text" class="st-dob input-row"></td>
-            <td><input type="text" class="st-job input-row"></td>
             <td><input type="text" class="st-cccd input-row" onkeyup="matchImage(this)"></td>
-            <td align="center"><img class="img-preview img-box" src=""></td>
-            <td align="center"><button onclick="this.parentElement.parentElement.remove(); updateRowNums();" style="color:red; border:none; background:none; cursor:pointer">✖</button></td>`;
-        tbody.appendChild(row);
-        updateRowNums();
+            <td><img class="img-preview img-box" src=""></td>
+            <td align="center"><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>`;
     }
-
-    function updateRowNums() {
-        document.querySelectorAll('.row-num').forEach((td, index) => td.innerText = index + 1);
-    }
-
-    const transparentPixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
     async function processDoc(templateName) {
         try {
-            const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
-            if (typeof window.PizZip === 'undefined' || typeof ImgModule !== 'function') {
-                throw new Error("Hệ thống không tìm thấy file thư viện. Hãy chắc chắn anh đã tải index.html mới nhất lên GitHub.");
-            }
-
-            const resp = await fetch(templateName);
-            if (!resp.ok) throw new Error("Không tìm thấy phôi: " + templateName);
+            const resp = await fetch(templateName + "?v=" + new Date().getTime());
             const arrayBuffer = await resp.arrayBuffer();
             const zip = new PizZip(arrayBuffer);
-
-            const imageOptions = {
-                getImage: function(tagValue) {
-                    const b64Str = (tagValue && tagValue.startsWith('data:image')) ? tagValue.split(',')[1] : transparentPixel;
-                    const bin = window.atob(b64Str);
-                    const res = new Uint8Array(bin.length);
-                    for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
-                    return res;
-                },
-                getSize: () => [113, 151] 
-            };
+            const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
 
             const doc = new window.docxtemplater(zip, { 
-                modules: [new ImgModule(imageOptions)],
-                paragraphLoop: true,
-                linebreaks: true,
+                modules: [new ImgModule({
+                    getImage: (v) => {
+                        const bin = window.atob(v.split(',')[1]);
+                        const res = new Uint8Array(bin.length);
+                        for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
+                        return res;
+                    },
+                    getSize: () => [113, 151]
+                })],
                 nullGetter: () => ""
             });
 
-            const commonData = {
-                Đơn_vị_: document.getElementById('comp').value,
-                Nội_dung_HL: document.getElementById('course').value,
-                Từ_ngày: document.getElementById('sDate').value,
-                Đến_ngày: document.getElementById('eDate').value,
-                Địa_điểm_công_ty: document.getElementById('loc').value,
-                Ngày_cấp: document.getElementById('issueDate').value,
-                Thời_hạn_thẻ_GCN: document.getElementById('expiry').value
-            };
-
             const rows = document.querySelectorAll("#stTable tbody tr");
-            const students = [];
-
-            rows.forEach(row => {
-                const cccd = row.querySelector(".st-cccd").value.trim();
-                students.push({
-                    ...commonData,
-                    Họ_và_tên: row.querySelector(".st-name").value,
-                    Sinh_ngày: row.querySelector(".st-dob").value,
-                    Công_việc: row.querySelector(".st-job").value,
-                    Mã_thẻ: cccd, 
-                    Hinh_anh: imageDictionary[cccd] || "" 
-                });
-            });
-
-            const pages = [];
-            for (let i = 0; i < students.length; i += 9) {
-                const pageObj = {};
-                for (let j = 0; j < 9; j++) {
-                    pageObj[`p${j+1}`] = students[i + j] || { ...commonData, Họ_và_tên: "", Sinh_ngày: "", Công_việc: "", Mã_thẻ: "", Hinh_anh: "" };
-                }
-                pages.push(pageObj);
-            }
-
-            doc.render({ 
-                ...commonData, 
-                Học_viên: students, 
-                Pages: pages 
-            });
-
-            const out = doc.getZip().generate({ type: "blob" });
-            saveAs(out, `VDC_Xuat_The_${templateName}`);
+            const data = {};
             
-        } catch (error) {
-            // ĐÂY LÀ PHẦN GIẢI MÃ LỖI MULTI ERROR CỦA DOCXTEMPLATER
-            if (error.properties && error.properties.errors instanceof Array) {
-                const errMsgs = error.properties.errors.map(function (e) {
-                    return "👉 " + (e.properties.explanation || e.message);
-                }).join("\n\n");
-                alert("⚠️ PHÁT HIỆN LỖI CẤU TRÚC TRONG FILE WORD:\n\n" + errMsgs + "\n\nAnh hãy mở file Word (" + templateName + ") ra và sửa lại các lỗi trên nhé.");
-            } else {
-                alert("Lỗi xuất file: " + error.message);
-            }
-            console.error(error);
-        }
+            // Đổ dữ liệu vào các biến p1, p2... khớp với file Word của anh
+            rows.forEach((row, i) => {
+                const cccd = row.querySelector(".st-cccd").value.trim();
+                data[`p${i+1}`] = {
+                    Đơn_vị_: document.getElementById('comp').value,
+                    Họ_và_tên: row.querySelector(".st-name").value,
+                    Mã_thẻ: cccd,
+                    Hinh_anh: imageDictionary[cccd] || ""
+                };
+            });
+
+            doc.render(data);
+            saveAs(doc.getZip().generate({ type: "blob" }), "Ket_qua_the.docx");
+        } catch (e) { alert("Lỗi: " + e.message); }
     }
 </script>
 </body>
