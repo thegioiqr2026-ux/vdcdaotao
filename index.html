@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Offline Mode v2.11</title>
+    <title>VDC Đào tạo - Error Decoder v2.12</title>
     
     <script src="pizzip.min.js"></script>
     <script src="docxtemplater.min.js"></script>
@@ -38,7 +38,7 @@
 <body>
 
 <div class="app-card">
-    <div style="float:right; font-size:12px; color:#888;">Version 2.11 (Offline/GitHub Edition)</div>
+    <div style="float:right; font-size:12px; color:#888;">Version 2.12 (Error Decoder)</div>
     <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG XUẤT THẺ TỰ ĐỘNG GHÉP ẢNH</h2>
 
     <div class="setup-zone">
@@ -98,7 +98,6 @@
 </div>
 
 <script>
-    // Cấu hình Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
         authDomain: "vdcdaotao-bb832.firebaseapp.com",
@@ -112,7 +111,6 @@
         firebase.initializeApp(firebaseConfig);
     }
 
-    // Xử lý ảnh tự động
     let imageDictionary = {};
 
     function loadImages(event) {
@@ -164,12 +162,10 @@
         document.querySelectorAll('.row-num').forEach((td, index) => td.innerText = index + 1);
     }
 
-    // Xuất Word
     const transparentPixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
     async function processDoc(templateName) {
         try {
-            // Xác thực cấu trúc gọi biến ảnh mới
             const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
             if (typeof window.PizZip === 'undefined' || typeof ImgModule !== 'function') {
                 throw new Error("Hệ thống không tìm thấy file thư viện. Hãy chắc chắn anh đã tải index.html mới nhất lên GitHub.");
@@ -241,9 +237,17 @@
             const out = doc.getZip().generate({ type: "blob" });
             saveAs(out, `VDC_Xuat_The_${templateName}`);
             
-        } catch (e) {
-            alert("Lỗi xuất file: " + e.message);
-            console.error(e);
+        } catch (error) {
+            // ĐÂY LÀ PHẦN GIẢI MÃ LỖI MULTI ERROR CỦA DOCXTEMPLATER
+            if (error.properties && error.properties.errors instanceof Array) {
+                const errMsgs = error.properties.errors.map(function (e) {
+                    return "👉 " + (e.properties.explanation || e.message);
+                }).join("\n\n");
+                alert("⚠️ PHÁT HIỆN LỖI CẤU TRÚC TRONG FILE WORD:\n\n" + errMsgs + "\n\nAnh hãy mở file Word (" + templateName + ") ra và sửa lại các lỗi trên nhé.");
+            } else {
+                alert("Lỗi xuất file: " + error.message);
+            }
+            console.error(error);
         }
     }
 </script>
