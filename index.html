@@ -3,92 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Khắc phục Treo v2.3</title>
+    <title>VDC Đào tạo - Fix Image Module v2.4</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script src="https://open-xml-templating.github.io/docxtemplater-image-module/build/docxtemplater-image-module.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
+    
+    <script src="https://unpkg.com/docxtemplater-image-module-free@1.1.1/build/docxtemplater-image-module-free.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
         body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
-        .app-card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); position: relative; }
-        
-        /* Hiển thị trạng thái tải */
-        #loading-zone { background: #fff3cd; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        .hidden { display: none !important; }
-        
+        .app-card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
         .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
         .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
         .btn-blue { background: var(--vdc-blue); }
         .btn-gold { background: var(--vdc-gold); }
-        .img-box { width: 60px; height: 80px; background: #eee; border: 1px solid #ddd; margin-top: 5px; }
+        .img-box { width: 60px; height: 80px; background: #eee; border: 1px solid #ddd; margin-top: 5px; object-fit: cover; }
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div id="loading-zone">
-        <strong id="load-status">⏳ Đang khởi tạo thư viện xử lý Word...</strong>
-        <p style="font-size: 12px; margin-top: 5px;">Nếu bị treo quá lâu, vui lòng kiểm tra kết nối mạng.</p>
-        <button onclick="forceStart()" style="margin-top:10px; font-size:11px; cursor:pointer;">Ép chạy (Nếu F5 không được)</button>
+    <div style="float:right; font-size:12px">Build: 2026.03.21 | v2.4</div>
+    <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG IN THẺ VDC v2.4</h2>
+
+    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; font-size:14px">
+        <b>Lưu ý:</b> File <b>Mattruoc.docx</b> phải dùng thẻ <b>{%Hinh_anh}</b> để chèn ảnh.
+    </div>
+    
+    <div class="form-grid">
+        <div><label>Tên đơn vị</label><input type="text" id="comp" value="Công ty VDC"></div>
+        <div><label>Mã thẻ</label><input type="text" id="code" value="VDC-2026-01"></div>
     </div>
 
-    <div id="main-app" class="hidden">
-        <h2 style="color:var(--vdc-blue); text-align:center; margin-top:0;">HỆ THỐNG IN THẺ VDC v2.3</h2>
-        
-        <div class="form-grid">
-            <div><label>Tên đơn vị</label><input type="text" id="comp" value="Công ty VDC"></div>
-            <div><label>Mã thẻ</label><input type="text" id="code" value="VDC-2026-01"></div>
-        </div>
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="background:var(--vdc-blue); color:white;">
+                <th style="padding:10px;">Học viên</th>
+                <th>Ảnh 3x4</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:10px; border:1px solid #ddd;">
+                    <input type="text" id="name" value="Nguyễn Minh Hòa" style="margin-bottom:5px;"><br>
+                    <input type="text" id="dob" value="01/01/1967">
+                </td>
+                <td style="padding:10px; border:1px solid #ddd; text-align:center;">
+                    <input type="file" accept="image/*" onchange="handleImg(this)">
+                    <img id="preview" class="img-box" src="">
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-        <table style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr style="background:var(--vdc-blue); color:white;">
-                    <th style="padding:10px;">Học viên</th>
-                    <th>Ảnh 3x4</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding:10px; border:1px solid #ddd;">
-                        <input type="text" id="name" value="Nguyễn Minh Hòa" style="margin-bottom:5px;"><br>
-                        <input type="text" id="dob" value="01/01/1967">
-                    </td>
-                    <td style="padding:10px; border:1px solid #ddd; text-align:center;">
-                        <input type="file" accept="image/*" onchange="handleImg(this)">
-                        <img id="preview" class="img-box" src="">
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="btn-group">
-            <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
-            <button class="btn btn-gold" onclick="processDoc('Matsau.docx')">XUẤT MẶT SAU</button>
-        </div>
+    <div class="btn-group">
+        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC (CÓ ẢNH)</button>
+        <button class="btn btn-gold" onclick="processDoc('Matsau.docx')">XUẤT MẶT SAU</button>
     </div>
 </div>
 
 <script>
-    // Kiểm tra sự tồn tại của thư viện mỗi 1 giây
-    const checkInterval = setInterval(() => {
-        if (typeof window.PizZip !== 'undefined' && typeof window.docxtemplater !== 'undefined') {
-            document.getElementById('loading-zone').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            clearInterval(checkInterval);
-        }
-    }, 1000);
-
-    function forceStart() {
-        document.getElementById('loading-zone').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-    }
-
     function handleImg(input) {
         const reader = new FileReader();
         reader.onload = (e) => document.getElementById('preview').src = e.target.result;
@@ -97,37 +75,57 @@
 
     async function processDoc(templateName) {
         try {
+            // Tải file mẫu
             const resp = await fetch(templateName);
-            if (!resp.ok) throw new Error("Không tìm thấy file mẫu " + templateName);
+            if (!resp.ok) throw new Error("Không tìm thấy file mẫu: " + templateName);
             const arrayBuffer = await resp.arrayBuffer();
 
             const zip = new PizZip(arrayBuffer);
+
+            // Cấu hình Image Module tương thích với bản docxtemplater-image-module-free
             const imageOptions = {
-                getImage: (tag) => {
-                    const b64 = tag.split(',')[1];
+                getImage: function(tagValue) {
+                    if (!tagValue || !tagValue.startsWith('data:image')) {
+                        return new Uint8Array(0); // Trả về ảnh rỗng nếu không có dữ liệu để tránh crash
+                    }
+                    const b64 = tagValue.split(',')[1];
                     const bin = window.atob(b64);
                     const res = new Uint8Array(bin.length);
                     for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
                     return res;
                 },
-                getSize: () => [113, 151] // 3x4cm
+                getSize: function() {
+                    return [113, 151]; // Kích thước xấp xỉ 3x4cm
+                }
             };
 
-            const imgModule = new window.ImageModule(imageOptions);
-            const doc = new window.docxtemplater(zip, { modules: [imgModule] });
+            // Tìm và sử dụng đúng đối tượng Constructor của thư viện
+            const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
+            if (!ImgModule) {
+                throw new Error("Thư viện xử lý ảnh chưa tải xong hoặc bị lỗi kết nối.");
+            }
 
+            const imgModule = new ImgModule(imageOptions);
+            const doc = new window.docxtemplater(zip, { 
+                modules: [imgModule],
+                paragraphLoop: true,
+                linebreaks: true 
+            });
+
+            // Đổ dữ liệu
             doc.render({
                 Đơn_vị_: document.getElementById('comp').value,
                 Họ_và_tên: document.getElementById('name').value,
                 Sinh_ngày: document.getElementById('dob').value,
                 Mã_thẻ: document.getElementById('code').value,
-                Hinh_anh: document.getElementById('preview').src // Chuỗi Base64
+                Hinh_anh: document.getElementById('preview').src // Lấy chuỗi Base64 từ thẻ <img>
             });
 
             const out = doc.getZip().generate({ type: "blob" });
             saveAs(out, `Ket_qua_${templateName}`);
         } catch (e) {
             alert("Lỗi: " + e.message);
+            console.error(e);
         }
     }
 </script>
