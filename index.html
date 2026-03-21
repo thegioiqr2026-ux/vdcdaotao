@@ -3,73 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Đào tạo - Final Sync v3.1</title>
-    
+    <title>VDC - Siêu Đơn Giản v3.2</title>
     <script src="pizzip.min.js"></script>
     <script src="docxtemplater.min.js"></script>
     <script src="imagemodule.min.js"></script>
     <script src="FileSaver.min.js"></script>
-
     <style>
-        :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
-        body { font-family: 'Times New Roman', serif; background: #f0f2f5; padding: 20px; }
-        .app-card { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
-        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: var(--vdc-blue); color: white; padding: 10px; font-size: 14px;}
-        td { border: 1px solid #ddd; padding: 8px; vertical-align: middle; }
-        .input-row { width: 100%; border: none; outline: none; padding: 5px; font-size: 14px;}
-        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-blue { background: var(--vdc-blue); }
-        .btn-gold { background: var(--vdc-gold); }
-        .img-box { width: 45px; height: 60px; background: #f9f9f9; border: 1px solid #ddd; object-fit: cover; margin: 0 auto; display: block;}
+        body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+        .card { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 8px; margin: 5px 0; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .btn { padding: 10px 20px; background: #003366; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .img-preview { width: 50px; height: 60px; object-fit: cover; border: 1px solid #ccc; display: block; }
     </style>
 </head>
 <body>
+<div class="card">
+    <h2>HỆ THỐNG XUẤT THẺ VDC (v3.2)</h2>
+    <p>1. Chọn thư mục ảnh (Tên ảnh là số CCCD):</p>
+    <input type="file" id="imgFolder" webkitdirectory directory multiple onchange="loadImages(event)">
+    
+    <p>2. Thông tin chung:</p>
+    <label>Tên đơn vị:</label>
+    <input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC">
 
-<div class="app-card">
-    <div style="float:right; font-size:12px; color:#888;">Version 3.1</div>
-    <h2 style="color:var(--vdc-blue); text-align:center;">HỆ THỐNG XUẤT THẺ VDC</h2>
-
-    <div style="background:#e8f4fd; padding:15px; border-radius:5px; margin-bottom:20px; border:1px dashed var(--vdc-blue);">
-        <label style="font-weight:bold;">📁 BƯỚC 1: CHỌN THƯ MỤC ẢNH (Tên file = CCCD)</label>
-        <input type="file" id="imgFolder" webkitdirectory directory multiple onchange="loadImages(event)" style="margin-top:10px;">
-        <div id="imgStatus" style="margin-top:5px; color:green; font-weight:bold;">Đã nạp: 0 ảnh</div>
-    </div>
-
-    <div class="form-grid">
-        <div style="grid-column: span 2;"><label>Tên đơn vị</label><input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC"></div>
-        <div><label>Nội dung HL</label><input type="text" id="course" value="An toàn vệ sinh lao động"></div>
-        <div><label>Ngày cấp</label><input type="text" id="issueDate" value="21/03/2026"></div>
-    </div>
-
-    <table id="stTable">
+    <table>
         <thead>
             <tr>
-                <th width="5%">STT</th>
-                <th width="30%">Họ và tên</th>
-                <th width="30%">Số CCCD (Mã thẻ)</th>
-                <th width="20%">Ảnh</th>
-                <th width="15%">Thao tác</th>
+                <th>Họ tên</th>
+                <th>CCCD (Mã thẻ)</th>
+                <th>Ảnh</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td align="center">1</td>
-                <td><input type="text" class="st-name input-row" value="Nguyễn Minh Hòa"></td>
-                <td><input type="text" class="st-cccd input-row" value="079069011376" onkeyup="matchImage(this)"></td>
-                <td><img class="img-preview img-box" src=""></td>
-                <td align="center"><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>
+                <td><input type="text" class="st-name" value="Nguyễn Minh Hòa"></td>
+                <td><input type="text" class="st-cccd" value="079069011376" onkeyup="matchImage(this)"></td>
+                <td><img class="img-preview" src=""></td>
             </tr>
         </tbody>
     </table>
-    
-    <button onclick="addRow()" style="margin-top:10px;">+ Thêm dòng</button>
 
-    <div class="btn-group">
-        <button class="btn btn-blue" onclick="processDoc('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
+    <div style="margin-top:20px; text-align:center;">
+        <button class="btn" onclick="processDoc()">XUẤT FILE WORD</button>
     </div>
 </div>
 
@@ -78,15 +55,12 @@
 
     function loadImages(event) {
         const files = event.target.files;
-        let count = 0;
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const name = file.name.substring(0, file.name.lastIndexOf('.'));
+                    const name = file.name.split('.')[0];
                     imageDictionary[name] = e.target.result;
-                    count++;
-                    document.getElementById('imgStatus').innerText = `Đã nạp: ${count} ảnh`;
                     document.querySelectorAll('.st-cccd').forEach(input => matchImage(input));
                 };
                 reader.readAsDataURL(file);
@@ -100,19 +74,9 @@
         img.src = imageDictionary[cccd] || "";
     }
 
-    function addRow() {
-        const tb = document.querySelector("#stTable tbody");
-        const nr = tb.insertRow();
-        nr.innerHTML = `<td align="center">${tb.rows.length}</td>
-            <td><input type="text" class="st-name input-row"></td>
-            <td><input type="text" class="st-cccd input-row" onkeyup="matchImage(this)"></td>
-            <td><img class="img-preview img-box" src=""></td>
-            <td align="center"><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>`;
-    }
-
-    async function processDoc(templateName) {
+    async function processDoc() {
         try {
-            const resp = await fetch(templateName + "?v=" + new Date().getTime());
+            const resp = await fetch("Mattruoc.docx?v=" + new Date().getTime());
             const arrayBuffer = await resp.arrayBuffer();
             const zip = new PizZip(arrayBuffer);
             const ImgModule = window.ImageModule || window.docxtemplaterImageModuleFree;
@@ -130,22 +94,22 @@
                 nullGetter: () => ""
             });
 
-            const rows = document.querySelectorAll("#stTable tbody tr");
+            const rows = document.querySelectorAll("tbody tr");
             const data = {};
             
-            // Đổ dữ liệu vào các biến p1, p2... khớp với file Word của anh
+            // Tên biến cực ngắn để anh gõ vào Word không sai được
             rows.forEach((row, i) => {
                 const cccd = row.querySelector(".st-cccd").value.trim();
                 data[`p${i+1}`] = {
-                    Đơn_vị_: document.getElementById('comp').value,
-                    Họ_và_tên: row.querySelector(".st-name").value,
-                    Mã_thẻ: cccd,
-                    Hinh_anh: imageDictionary[cccd] || ""
+                    dv: document.getElementById('comp').value, // dv = Đơn vị
+                    ten: row.querySelector(".st-name").value,  // ten = Tên
+                    ma: cccd,                                  // ma = Mã thẻ
+                    anh: imageDictionary[cccd] || ""           // anh = Ảnh
                 };
             });
 
             doc.render(data);
-            saveAs(doc.getZip().generate({ type: "blob" }), "Ket_qua_the.docx");
+            saveAs(doc.getZip().generate({ type: "blob" }), "The_VDC_Thanh_Cong.docx");
         } catch (e) { alert("Lỗi: " + e.message); }
     }
 </script>
