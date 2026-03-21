@@ -3,110 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC - In Thẻ Từ Mẫu v1.9</title>
+    <title>VDC Đào tạo - Fix PizZip & Image v2.1</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.js"></script>
+    <script src="https://open-xml-templating.github.io/docxtemplater-image-module/build/docxtemplater-image-module.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         :root { --vdc-gold: #d4a017; --vdc-blue: #003366; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8f9fa; padding: 20px; }
-        .app-card { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--vdc-gold); }
-        .status-bar { padding: 10px; margin-bottom: 20px; border-radius: 4px; font-size: 13px; text-align: center; background: #e7f3ff; color: #004085; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        body { font-family: 'Times New Roman', serif; background: #f4f4f4; padding: 20px; }
+        .app-card { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--vdc-gold); }
+        .status-msg { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: var(--vdc-blue); color: white; padding: 10px; }
-        td { border: 1px solid #ddd; padding: 5px; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 30px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-primary { background: var(--vdc-blue); }
-        .btn-secondary { background: var(--vdc-gold); }
+        td { border: 1px solid #ddd; padding: 8px; }
+        .btn-group { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-front { background: var(--vdc-blue); color: white; }
+        .btn-back { background: var(--vdc-gold); color: white; }
+        .img-preview { width: 40px; height: 50px; object-fit: cover; border: 1px solid #ccc; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div style="float:right; font-size:12px">v1.9</div>
-    <h2 style="color:var(--vdc-blue); text-align:center">HỆ THỐNG ĐỔ DỮ LIỆU THẺ VDC</h2>
+    <div style="float:right; font-size:12px">v2.1</div>
+    <h2 style="color:var(--vdc-blue); text-align:center">HỆ THỐNG XUẤT THẺ VDC (FIX PIZZIP)</h2>
     
-    <div class="status-bar">
-        ⚡ Hệ thống sẽ tự động tìm file <b>Mattruoc.docx</b> và <b>Matsau.docx</b> trong cùng thư mục.
-    </div>
-
-    <div class="form-row">
-        <div><label>Nội dung huấn luyện</label><input type="text" id="course_name" value="An toàn vệ sinh lao động"></div>
-        <div><label>Địa điểm & Ngày cấp</label><input type="text" id="loc_date" value="Thanh Hóa, ngày 21 tháng 03 năm 2026"></div>
+    <div class="status-msg">
+        Lưu ý: Đảm bảo file <b>Mattruoc.docx</b> có thẻ <b>{%Hinh_anh}</b> và <b>Matsau.docx</b> có các thẻ <b>{Họ_và_tên}</b>.
     </div>
 
     <table id="stTable">
         <thead>
             <tr>
-                <th>Họ và tên</th>
-                <th>Năm sinh</th>
-                <th>Công việc</th>
-                <th>Mã thẻ</th>
+                <th>Họ tên</th>
+                <th>Thông tin thẻ</th>
+                <th width="20%">Ảnh 3x4</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><input type="text" class="st-name" style="width:100%; border:none" value="Nguyễn Minh Hòa"></td>
-                <td><input type="text" class="st-dob" style="width:100%; border:none" value="01/01/1967"></td>
-                <td><input type="text" class="st-job" style="width:100%; border:none" value="Phòng M&E"></td>
-                <td><input type="text" class="st-code" style="width:100%; border:none" value="VDC-2026-001"></td>
+                <td><input type="text" class="st-name" value="Nguyễn Minh Hòa" style="width:95%"></td>
+                <td>
+                    Mã: <input type="text" class="st-code" value="VDC-N3-001"><br>
+                    Ngày: <input type="text" class="st-dob" value="01/01/1967">
+                </td>
+                <td>
+                    <input type="file" accept="image/*" onchange="previewImg(this)">
+                    <img class="img-preview" src="">
+                </td>
             </tr>
         </tbody>
     </table>
 
     <div class="btn-group">
-        <button class="btn btn-primary" onclick="generateFromTemplate('Mattruoc.docx')">XUẤT MẶT TRƯỚC</button>
-        <button class="btn btn-secondary" onclick="generateFromTemplate('Matsau.docx')">XUẤT MẶT SAU</button>
+        <button class="btn btn-front" onclick="generateBatch('Mattruoc.docx')">XUẤT MẶT TRƯỚC (CÓ ẢNH)</button>
+        <button class="btn btn-back" onclick="generateBatch('Matsau.docx')">XUẤT MẶT SAU</button>
     </div>
 </div>
 
 <script>
-    // Hàm đọc file từ Server/Github
-    async function loadFile(url) {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Không tìm thấy file: ${url}`);
-        return await response.arrayBuffer();
+    // Xử lý xem trước và lưu Base64 ảnh
+    function previewImg(input) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            input.nextElementSibling.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 
-    async function generateFromTemplate(fileName) {
-        try {
-            const templateBuffer = await loadFile(fileName);
-            const zip = new PizZip(templateBuffer);
-            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    // Cấu hình Image Module cho docxtemplater
+    const imageOptions = {
+        getImage(tagValue) {
+            return b64ToUint8Array(tagValue.split(',')[1]);
+        },
+        getSize() {
+            return [113, 151]; // Tương đương ảnh 3x4 cm trong Word
+        }
+    };
 
-            // Thu thập dữ liệu từ bảng 
+    function b64ToUint8Array(b64) {
+        const bin = window.atob(b64);
+        const len = bin.length;
+        const u8 = new Uint8Array(len);
+        for (let i = 0; i < len; i++) u8[i] = bin.charCodeAt(i);
+        return u8;
+    }
+
+    async function generateBatch(templateName) {
+        try {
+            // Kiểm tra thư viện
+            if (typeof window.PizZip === 'undefined') {
+                throw new Error("Thư viện PizZip chưa tải xong. Vui lòng kiểm tra internet và F5 trang.");
+            }
+
+            const response = await fetch(templateName);
+            if (!response.ok) throw new Error(`Không tìm thấy file ${templateName} trong thư mục.`);
+            const content = await response.arrayBuffer();
+
+            const zip = new PizZip(content);
+            const imageModule = new window.ImageModule(imageOptions);
+            const doc = new window.docxtemplater(zip, {
+                modules: [imageModule],
+                paragraphLoop: true,
+                linebreaks: true
+            });
+
             const rows = document.querySelectorAll("#stTable tbody tr");
-            const data = {
-                Đơn_vị_: "CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC", // Khớp với <<Đơn_vị_>>
-                Nội_dung_HL: document.getElementById("course_name").value,
-                Ngày_cấp: document.getElementById("loc_date").value,
-                Học_viên: [] // Danh sách lặp cho các Record tiếp theo
-            };
+            const students = [];
 
             rows.forEach(row => {
-                data.Học_viên.push({
+                students.push({
                     Họ_và_tên: row.querySelector(".st-name").value,
                     Sinh_ngày: row.querySelector(".st-dob").value,
-                    Công_việc: row.querySelector(".st-job").value,
-                    Mã_thẻ: row.querySelector(".st-code").value
+                    Mã_thẻ: row.querySelector(".st-code").value,
+                    Hinh_anh: row.querySelector(".img-preview").src // Chuỗi Base64
                 });
             });
 
-            // Đổ dữ liệu vào các thẻ <<tag>>
-            // Lưu ý: Nếu mẫu dùng dạng lặp, bạn cần cấu hình khớp với tên tag trong docx
+            // Đổ dữ liệu vào template
             doc.render({
-                ...data,
-                Họ_và_tên: data.Học_viên[0].Họ_và_tên,
-                Sinh_ngày: data.Học_viên[0].Sinh_ngày,
-                Công_việc: data.Học_viên[0].Công_việc,
-                Mã_thẻ: data.Học_viên[0].Mã_thẻ
+                Đơn_vị_: "CÔNG TY CP HTQT VDC",
+                Học_viên: students,
+                // Map dữ liệu cho bản ghi đầu tiên (nếu template không dùng loop)
+                ...students[0]
             });
 
-            const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-            saveAs(out, `In_The_VDC_${fileName}`);
+            const out = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
+
+            saveAs(out, `Ket_qua_${templateName}`);
 
         } catch (error) {
             console.error(error);
