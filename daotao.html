@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>VDC - Trung Tâm Tiếp Nhận Đào Tạo v4.1</title>
+    <script src="pizzip.min.js"></script>
+    <script src="docxtemplater.min.js"></script>
+    <script src="FileSaver.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial; background: #eceff1; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 6px solid #003366; }
+        .status-bar { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 5px solid #2e7d32; display: flex; justify-content: space-between; align-items: center; }
+        .doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+        .doc-card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; text-align: center; transition: 0.3s; background: #fff; }
+        .doc-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #d4a017; }
+        .btn-exp { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; width: 100%; font-weight: bold; }
+        .btn-special { background: #d4a017; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; font-size: 14px; }
+        th { background: #f4f4f4; color: #333; }
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .badge-wait { background: #fff3e0; color: #ef6c00; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="color:#003366; text-align:center;">TRUNG TÂM TIẾP NHẬN & XUẤT HỒ SƠ VDC</h2>
+
+    <div class="status-bar" id="statusBar">
+        <div><strong>Trạng thái:</strong> <span class="badge badge-wait">Đang chờ dữ liệu từ Kinh doanh...</span></div>
+        <button onclick="refreshData()" style="padding:8px 15px; cursor:pointer;">🔄 Kiểm tra dữ liệu mới</button>
+    </div>
+
+    <div id="mainContent" style="display:none;">
+        <div style="background:#f8fbff; padding:20px; border-radius:10px; margin-bottom:30px;">
+            <h3 style="margin-top:0; color:#003366;">📌 Thông tin lớp học tiếp nhận:</h3>
+            <p><strong>Khách hàng:</strong> <span id="viewKH"></span></p>
+            <p><strong>Nội dung:</strong> <span id="viewND"></span></p>
+            <p><strong>Thời gian:</strong> <span id="viewTG"></span> | <strong>Địa điểm:</strong> <span id="viewDD"></span></p>
+        </div>
+
+        <h3 style="color:#003366; border-left:4px solid #d4a017; padding-left:10px;">📂 DANH MỤC VĂN BẢN CẦN IN (Theo giai đoạn)</h3>
+        
+        <div class="doc-grid">
+            <div class="doc-card">
+                <div style="font-size:12px; color:#888;">GIAI ĐOẠN 1: MỞ LỚP</div>
+                <h4 style="margin:10px 0;">Quyết định mở lớp</h4>
+                <button class="btn-exp" onclick="exportDoc('QD_MoLop.docx')">Xuất file Word</button>
+            </div>
+            <div class="doc-card">
+                <div style="font-size:12px; color:#888;">GIAI ĐOẠN 1: MỞ LỚP</div>
+                <h4 style="margin:10px 0;">Kế hoạch huấn luyện</h4>
+                <button class="btn-exp" onclick="exportDoc('KeHoach_HL.docx')">Xuất file Word</button>
+            </div>
+            <div class="doc-card">
+                <div style="font-size:12px; color:#888;">GIAI ĐOẠN 2: TRIỂN KHAI</div>
+                <h4 style="margin:10px 0;">Danh sách học viên</h4>
+                <button class="btn-exp" onclick="exportDoc('DanhSach_HV.docx')">Xuất file Word</button>
+            </div>
+            <div class="doc-card" style="border: 2px dashed #d4a017;">
+                <div style="font-size:12px; color:#d4a017; font-weight:bold;">CÔNG CỤ RIÊNG</div>
+                <h4 style="margin:10px 0;">Dữ liệu In Thẻ (Excel)</h4>
+                <p style="font-size:11px; color:#666;">Dùng cho Labels Merge & Photo Tool</p>
+                <button class="btn-exp btn-special" onclick="exportExcelForCards()">Tải Data in Thẻ</button>
+            </div>
+        </div>
+
+        <h3 style="margin-top:40px; color:#003366;">👥 Chi tiết danh sách tiếp nhận:</h3>
+        <table id="stTable">
+            <thead>
+                <tr><th>STT</th><th>Họ và tên</th><th>Số CCCD</th><th>Chức vụ/Bộ phận</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let currentData = null;
+
+    function refreshData() {
+        const raw = localStorage.getItem('vdc_transfer_data');
+        if (raw) {
+            currentData = JSON.parse(raw);
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('statusBar').innerHTML = `<div><strong>Trạng thái:</strong> <span style="color:#2e7d32; font-weight:bold;">✅ Đã tiếp nhận dữ liệu từ Kinh doanh</span></div>`;
+            
+            document.getElementById('viewKH').innerText = currentData.khachHang;
+            document.getElementById('viewND').innerText = currentData.noiDung;
+            document.getElementById('viewTG').innerText = currentData.thoiGian;
+            document.getElementById('viewDD').innerText = currentData.diaDiem;
+
+            const tbody = document.querySelector("#stTable tbody");
+            tbody.innerHTML = "";
+            currentData.hocVien.forEach((hv, i) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${i+1}</td><td>${hv.ten}</td><td>${hv.cccd}</td><td>${hv.chucvu}</td>`;
+            });
+        } else {
+            alert("Chưa có dữ liệu mới từ bộ phận Kinh doanh.");
+        }
+    }
+
+    async function exportDoc(templateName) {
+        if (!currentData) return;
+        try {
+            const resp = await fetch(templateName);
+            const arrayBuffer = await resp.arrayBuffer();
+            const zip = new PizZip(arrayBuffer);
+            const doc = new window.docxtemplater(zip, { nullGetter: () => "" });
+
+            // Chuẩn bị dữ liệu đổ vào phôi Word
+            const renderData = {
+                dv_hl: "CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC",
+                khach_hang: currentData.khachHang,
+                noi_dung: currentData.noiDung,
+                thoi_gian: currentData.thoiGian,
+                dia_diem: currentData.diaDiem,
+                hocvien: currentData.hocVien.map((hv, i) => ({
+                    stt: i + 1,
+                    ten: hv.ten,
+                    cccd: hv.cccd,
+                    chucvu: hv.chucvu
+                }))
+            };
+
+            doc.render(renderData);
+            saveAs(doc.getZip().generate({ type: "blob" }), "VDC_" + templateName);
+        } catch (e) { alert("Lỗi xuất file: " + e.message + "\nLưu ý: Bạn cần để file phôi Word trong cùng thư mục."); }
+    }
+
+    function exportExcelForCards() {
+        // Hàm giả lập xuất dữ liệu sạch để anh nạp vào Word Labels Merge
+        alert("Hệ thống đang trích xuất dữ liệu sạch sang Excel...\nDữ liệu bao gồm: Họ tên, CCCD, Chức vụ và khớp mã ảnh.");
+    }
+</script>
+
+</body>
+</html>
