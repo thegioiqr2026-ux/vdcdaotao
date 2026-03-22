@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>VDC - Cổng Nhập Liệu Kinh Doanh v4.0</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial; background: #f4f7f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #d4a017; margin-bottom: 20px; padding-bottom: 10px; color: #003366; }
+        .section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #003366; color: white; padding: 12px; }
+        td { border: 1px solid #eee; padding: 10px; }
+        .btn-send { background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 20px; }
+        .btn-add { background: #003366; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Kế Thừa Dữ Liệu Kinh Doanh ➔ Đào Tạo</h2>
+    </div>
+
+    <div class="section">
+        <div class="grid">
+            <div>
+                <label>Tên khách hàng (Pháp nhân):</label>
+                <input type="text" id="khachHang" placeholder="Ví dụ: Công ty TNHH ABC">
+            </div>
+            <div>
+                <label>Nội dung huấn luyện:</label>
+                <select id="noiDung">
+                    <option>An toàn vệ sinh lao động - Nhóm 1</option>
+                    <option>An toàn vệ sinh lao động - Nhóm 3</option>
+                    <option>An toàn vệ sinh lao động - Nhóm 4</option>
+                    <option>An toàn điện</option>
+                </select>
+            </div>
+            <div>
+                <label>Địa điểm huấn luyện:</label>
+                <input type="text" id="diaDiem" placeholder="Tại nhà máy khách hàng hoặc VDC">
+            </div>
+            <div>
+                <label>Thời gian dự kiến:</label>
+                <input type="text" id="thoiGian" placeholder="Ví dụ: 25/03/2026 - 27/03/2026">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <label>Danh sách học viên (Kinh doanh nhập):</label>
+        <table id="hocVienTable">
+            <thead>
+                <tr>
+                    <th width="5%">STT</th>
+                    <th width="35%">Họ và tên</th>
+                    <th width="35%">Số CCCD (Mã định danh)</th>
+                    <th width="25%">Chức vụ/Bộ phận</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="h-ten"></td>
+                    <td><input type="text" class="h-cccd"></td>
+                    <td><input type="text" class="h-chucvu"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn-add" onclick="addRow()">+ Thêm học viên</button>
+    </div>
+
+    <button class="btn-send" onclick="chuyenSangDaoTao()">🚀 BẤM CHUYỂN SANG ĐÀO TẠO</button>
+</div>
+
+<script>
+    function addRow() {
+        const table = document.getElementById("hocVienTable").getElementsByTagName('tbody')[0];
+        const row = table.insertRow();
+        row.innerHTML = `<td>${table.rows.length}</td>
+            <td><input type="text" class="h-ten"></td>
+            <td><input type="text" class="h-cccd"></td>
+            <td><input type="text" class="h-chucvu"></td>`;
+    }
+
+    function chuyenSangDaoTao() {
+        // Thu thập dữ liệu
+        const data = {
+            khachHang: document.getElementById('khachHang').value,
+            noiDung: document.getElementById('noiDung').value,
+            diaDiem: document.getElementById('diaDiem').value,
+            thoiGian: document.getElementById('thoiGian').value,
+            hocVien: []
+        };
+
+        const rows = document.querySelectorAll("#hocVienTable tbody tr");
+        rows.forEach(row => {
+            data.hocVien.push({
+                ten: row.querySelector('.h-ten').value,
+                cccd: row.querySelector('.h-cccd').value,
+                chucvu: row.querySelector('.h-chucvu').value
+            });
+        });
+
+        // Lưu vào LocalStorage (giả lập việc chuyển dữ liệu)
+        localStorage.setItem('vdc_transfer_data', JSON.stringify(data));
+        alert("Đã chuyển dữ liệu thành công! Bộ phận Đào tạo có thể tiếp nhận.");
+    }
+</script>
+
+</body>
+</html>
