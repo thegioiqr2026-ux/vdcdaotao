@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.88 - Stable Excel Reader</title>
+    <title>VDC System V1.89 - Ultimate Stable Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { background-color: #0f172a; }
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        th { sticky top: 0; background: #f8fafc; z-index: 20; border-bottom: 2px solid #e2e8f0; }
+        th { position: sticky; top: 0; background: #f8fafc; z-index: 20; border-bottom: 2px solid #e2e8f0; }
         .truncate-cell { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
@@ -20,7 +20,7 @@
 
     <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex shadow-2xl">
         <div class="p-6 text-xl font-bold border-b border-slate-700 text-center uppercase text-emerald-400">
-            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400">Version 1.88</span>
+            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400">Version 1.89 @Stable</span>
         </div>
         <nav class="flex-1 mt-4 px-2">
             <div class="p-4 bg-emerald-600/20 border-l-4 border-emerald-500 text-emerald-400 font-bold rounded-r-lg">
@@ -35,36 +35,32 @@
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
             <div class="flex flex-col">
-                <span class="text-[10px] text-slate-400 font-bold uppercase">Đơn vị huấn luyện</span>
+                <span class="text-[10px] text-slate-400 font-bold uppercase italic">Đơn vị huấn luyện VDC</span>
                 <h2 class="text-sm font-bold text-slate-700 uppercase" id="company-display">CHỜ NẠP FILE EXCEL...</h2>
             </div>
-            <div id="time-status" class="text-xs font-mono bg-slate-100 p-2 rounded border border-slate-200"></div>
+            <div id="time-status" class="text-xs font-mono bg-slate-800 text-white px-3 py-1.5 rounded shadow-inner"></div>
         </header>
 
         <div class="p-6 overflow-y-auto space-y-6">
-            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-300 p-10 rounded-2xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm">
-                <div class="bg-emerald-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-cloud-upload-alt text-xl text-emerald-600"></i>
-                </div>
-                <p class="text-sm font-bold text-slate-600">Bấm để chọn hoặc Kéo thả file Excel (.xlsx)</p>
-                <p class="text-[10px] text-slate-400 mt-1 italic">Hệ thống tự động bóc ảnh I, dữ liệu từ B-H và MST A4</p>
+            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-300 p-8 rounded-2xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                <i class="fas fa-file-import text-3xl text-emerald-500 mb-2"></i>
+                <p class="text-sm font-bold text-slate-600 italic">Bấm chọn hoặc Kéo thả file .xlsx vào đây</p>
                 <input type="file" id="file-input" class="hidden" accept=".xlsx">
             </div>
 
             <div class="card overflow-hidden border border-slate-200">
-                <div class="p-4 border-b bg-slate-50 flex justify-between items-center px-6">
-                    <h3 class="text-[10px] font-extrabold uppercase text-slate-500 tracking-widest">Dữ liệu học viên chi tiết (Dòng 11+)</h3>
-                    <span id="count-display" class="bg-emerald-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-sm">0 HV</span>
+                <div class="p-3 bg-slate-50 border-b flex justify-between items-center px-6">
+                    <h3 class="text-[10px] font-extrabold uppercase text-slate-500 tracking-widest italic">Dữ liệu học viên (Dòng 11+)</h3>
+                    <span id="count-display" class="bg-emerald-600 text-white px-3 py-1 rounded-full text-[10px] font-bold">0 HV</span>
                 </div>
                 
                 <div class="overflow-auto max-h-[calc(100vh-320px)] border-t">
-                    <table class="w-full text-left text-[11px] min-w-[1000px]">
+                    <table class="w-full text-left text-[11px] min-w-[1100px]">
                         <thead>
                             <tr class="text-slate-500 uppercase font-bold">
-                                <th class="p-4 border-r">Ảnh (I)</th>
                                 <th class="p-4 border-r">Nhóm (A)</th>
                                 <th class="p-4 border-r">Họ Tên (B)</th>
-                                <th class="p-4 border-r text-center">Phái (C)</th>
+                                <th class="p-4 border-r">Phái (C)</th>
                                 <th class="p-4 border-r">Ngày sinh (D)</th>
                                 <th class="p-4 border-r">Quốc tịch (E)</th>
                                 <th class="p-4 border-r">Công việc (F)</th>
@@ -74,7 +70,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
-                            <tr><td colspan="10" class="p-20 text-center text-slate-300 italic">Hệ thống đang sẵn sàng xử lý file Excel của anh.</td></tr>
+                            <tr><td colspan="9" class="p-20 text-center text-slate-300 italic">Vui lòng nạp file để bóc tách dữ liệu 9 cột.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -89,92 +85,76 @@
 
         dropZone.onclick = () => fileInput.click();
 
-        fileInput.addEventListener('change', async (e) => {
+        fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i><br><span class="text-xs mt-2 block">Đang nạp dữ liệu vào Buffer...</span></td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i><br>Đang đọc Binary Data...</td></tr>';
 
-            // Dùng FileReader để ép trình duyệt đọc đúng cấu trúc nhị phân của XLSX
             const reader = new FileReader();
-            reader.onload = async (event) => {
+            reader.onload = (event) => {
                 try {
-                    const workbook = new ExcelJS.Workbook();
-                    await workbook.xlsx.load(event.target.result);
-                    const sheet = workbook.getWorksheet(1);
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
 
-                    // Trích xuất Header
-                    const mst = sheet.getCell('A4').value?.toString().replace(/[^0-9]/g, "") || "---";
-                    const company = sheet.getCell('A3').value?.toString().replace("Công ty:", "").trim() || "CHƯA RÕ";
-                    const timeStr = sheet.getCell('A6').value?.toString() || "";
+                    // Trích xuất thông tin Header
+                    const mst = sheet['A4'] ? sheet['A4'].v.toString().replace(/[^0-9]/g, "") : "---";
+                    const company = sheet['A3'] ? sheet['A3'].v.toString().replace("Công ty:", "").trim() : "CHƯA RÕ";
+                    const timeStr = sheet['A6'] ? sheet['A6'].v.toString() : "";
 
                     document.getElementById('mst-display').innerText = mst;
                     document.getElementById('company-display').innerText = company.toUpperCase();
                     document.getElementById('time-status').innerText = timeStr;
 
-                    // Quét ảnh cột I (Col 9)
-                    const imageMap = {};
-                    sheet.getImages().forEach(img => {
-                        const row = Math.floor(img.range.tl.row) + 1;
-                        const col = Math.floor(img.range.tl.col) + 1;
-                        if (col === 9) imageMap[row] = workbook.getImage(img.imageId).buffer;
-                    });
-
+                    // Chuyển sang JSON để xử lý nhanh 9 cột
+                    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    
                     tableBody.innerHTML = '';
                     let currentGroup = "---";
                     let count = 0;
 
-                    sheet.eachRow((row, rowNumber) => {
-                        if (rowNumber >= 10) {
-                            const valA = row.getCell(1).value?.toString().trim() || "";
-                            const valB = row.getCell(2).value?.toString().trim() || "";
+                    jsonData.forEach((row, index) => {
+                        if (index < 10) return; // Dòng 11 bắt đầu từ index 10
 
-                            // Làm sạch tên Nhóm
-                            if (valA.toLowerCase().includes("nhóm")) {
-                                const match = valA.match(/Nhóm\s+\d+/i);
-                                currentGroup = match ? match[0] : valA;
-                                return;
-                            }
+                        const colA = row[0] ? row[0].toString().trim() : ""; // Nhóm
+                        const colB = row[1] ? row[1].toString().trim() : ""; // Họ tên
 
-                            // Quét dữ liệu học viên (Bỏ qua dòng ký tên)
-                            if (valB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => valB.toLowerCase().includes(w))) {
-                                const tr = document.createElement('tr');
-                                tr.className = "hover:bg-slate-50 transition-colors border-b";
+                        if (colA.toLowerCase().includes("nhóm")) {
+                            const match = colA.match(/Nhóm\s+\d+/i);
+                            currentGroup = match ? match[0] : colA;
+                            return;
+                        }
 
-                                // Render ảnh từ Buffer
-                                let imgTag = '<div class="w-8 h-10 bg-slate-100 border border-dashed flex items-center justify-center text-[7px] text-slate-300 uppercase mx-auto">TRỐNG I</div>';
-                                if (imageMap[rowNumber]) {
-                                    const blob = new Blob([imageMap[rowNumber]]);
-                                    const url = URL.createObjectURL(blob);
-                                    imgTag = `<img src="${url}" class="w-8 h-10 object-cover rounded shadow-sm mx-auto border border-slate-200">`;
-                                }
-
-                                tr.innerHTML = `
-                                    <td class="p-2 border-r text-center">${imgTag}</td>
-                                    <td class="p-2 border-r font-bold text-blue-600 text-[10px] uppercase">${currentGroup}</td>
-                                    <td class="p-2 border-r font-bold text-slate-800">${valB}</td>
-                                    <td class="p-2 border-r text-center">${row.getCell(3).value || ""}</td>
-                                    <td class="p-2 border-r">${row.getCell(4).value || ""}</td>
-                                    <td class="p-2 border-r">${row.getCell(5).value || ""}</td>
-                                    <td class="p-2 border-r truncate-cell" title="${row.getCell(6).value}">${row.getCell(6).value || ""}</td>
-                                    <td class="p-2 border-r font-mono font-bold">${row.getCell(7).value || ""}</td>
-                                    <td class="p-2 border-r truncate-cell text-slate-500" title="${row.getCell(8).value}">${row.getCell(8).value || ""}</td>
-                                    <td class="p-2 text-center">
-                                        <a href="vdc-print://export?id=${row.getCell(7).value}" class="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 shadow-sm inline-block">
-                                            <i class="fas fa-print"></i>
-                                        </a>
-                                    </td>
-                                `;
-                                tableBody.appendChild(tr);
-                                count++;
-                            }
+                        if (colB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => colB.toLowerCase().includes(w))) {
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-slate-50 transition-colors border-b";
+                            tr.innerHTML = `
+                                <td class="p-3 border-r font-bold text-blue-600 uppercase italic">${currentGroup}</td>
+                                <td class="p-3 border-r font-bold text-slate-800">${colB}</td>
+                                <td class="p-3 border-r text-center">${row[2] || ""}</td>
+                                <td class="p-3 border-r">${row[3] || ""}</td>
+                                <td class="p-3 border-r">${row[4] || ""}</td>
+                                <td class="p-3 border-r truncate-cell" title="${row[5]}">${row[5] || ""}</td>
+                                <td class="p-3 border-r font-mono font-bold text-emerald-700">${row[6] || ""}</td>
+                                <td class="p-3 border-r truncate-cell text-slate-500" title="${row[7]}">${row[7] || ""}</td>
+                                <td class="p-3 text-center">
+                                    <a href="vdc-print://export?id=${row[6]}" class="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 shadow-sm inline-block">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                            count++;
                         }
                     });
-                    document.getElementById('count-display').innerText = count + " HV";
+                    document.getElementById('count-display').innerText = count;
+
                 } catch (err) {
-                    console.error(err);
-                    alert("Lỗi đọc file! Anh hãy kiểm tra file có đúng định dạng .xlsx chuẩn không.");
-                    tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">LỖI ĐỊNH DẠNG FILE (.XLSX)</td></tr>';
+                    console.error("Lỗi:", err);
+                    alert("Không thể đọc file. Anh hãy dùng file Excel Workbook (*.xlsx) chuẩn nhé!");
+                    tableBody.innerHTML = '<tr><td colspan="9" class="p-20 text-center text-red-500 font-bold">LỖI ĐỊNH DẠNG HOẶC CẤU TRÚC FILE</td></tr>';
                 }
             };
             reader.readAsArrayBuffer(file);
