@@ -3,162 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.80 - Quản lý Đào tạo</title>
+    <title>VDC System V1.82 - GitHub Deploy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { background-color: #0f172a; }
-        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; }
-        .drop-zone.over { border-color: #10b981; background-color: #f0fdf4; }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; cursor: pointer; background: white; }
+        .drop-zone:hover { border-color: #10b981; background-color: #f0fdf4; }
         .status-pill { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 9999px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="sidebar w-64 text-white flex flex-col hidden md:flex">
-        <div class="p-6 text-xl font-bold border-b border-slate-700 text-center">
-            VDC SYSTEM
-            <span class="text-xs block font-normal text-emerald-400">Phiên bản 1.80</span>
+    <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex">
+        <div class="p-6 text-xl font-bold border-b border-slate-700 text-center text-emerald-400">
+            VDC SYSTEM <span class="text-xs block font-normal text-slate-400">v1.82 @GitHub</span>
         </div>
-        <nav class="flex-1 mt-4">
-            <a href="#" class="flex items-center p-4 bg-slate-800 border-l-4 border-emerald-500"><i class="fas fa-file-upload mr-3"></i> Nạp Dữ Liệu Excel</a>
+        <nav class="flex-1 mt-6">
+            <a href="#" class="flex items-center p-4 bg-emerald-600/10 border-l-4 border-emerald-500 text-emerald-400">
+                <i class="fas fa-upload mr-3"></i> Nạp File Excel
+            </a>
+            <a href="#" class="flex items-center p-4 hover:bg-slate-800 transition text-slate-400">
+                <i class="fas fa-database mr-3"></i> Dữ liệu Firebase
+            </a>
         </nav>
-        <div class="p-4 border-t border-slate-700 text-[10px] text-slate-400 uppercase">
-            MST (Ô A4): <span id="mst-display">---</span>
+        <div class="p-4 border-t border-slate-700">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Mã số thuế (A4)</p>
+            <p id="mst-display" class="font-mono text-emerald-500 font-bold">---</p>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col">
+    <main class="flex-1 flex flex-col min-w-0">
         <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-            <h2 class="text-sm font-bold text-slate-700 uppercase" id="company-display">CHƯA CÓ DỮ LIỆU CÔNG TY</h2>
-            <div id="time-status" class="flex items-center space-x-2">
-                </div>
+            <div class="flex flex-col">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Đơn vị huấn luyện</h2>
+                <h1 id="company-display" class="text-sm font-bold text-slate-800">CHỜ TẢI FILE EXCEL...</h1>
+            </div>
+            <div id="time-status" class="flex items-center"></div>
         </header>
 
         <div class="p-6 overflow-y-auto space-y-6">
-            <div id="drop-zone" class="drop-zone p-8 rounded-xl text-center cursor-pointer bg-white shadow-sm">
-                <i class="fas fa-file-excel text-3xl text-emerald-500 mb-2"></i>
-                <p class="text-sm text-slate-600 font-medium">Kéo thả file Excel vào đây (MST ở ô A4)</p>
+            <div id="drop-zone" class="drop-zone p-12 rounded-2xl text-center shadow-sm border-2">
+                <div class="bg-emerald-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-excel text-2xl text-emerald-600"></i>
+                </div>
+                <h3 class="text-slate-700 font-bold">Kéo & Thả file thông tin học viên</h3>
+                <p class="text-slate-400 text-sm mt-1">Hệ thống tự động bóc ảnh tại Cột I và MST tại ô A4</p>
                 <input type="file" id="file-input" class="hidden" accept=".xlsx">
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h3 class="text-xs font-bold uppercase text-slate-700">KIỂM TRA ĐIỀU KIỆN PHÁP LÝ (NĐ 44/2016)</h3>
-                    <span id="count-display" class="text-xs font-bold text-emerald-600">0 Học viên</span>
+                    <h3 class="text-xs font-extrabold uppercase text-slate-500 tracking-widest">Danh sách trích xuất</h3>
+                    <span id="count-display" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold">0 Học viên</span>
                 </div>
-                <div class="max-h-[500px] overflow-y-auto">
-                    <table class="w-full text-left text-xs" id="preview-table">
-                        <thead class="bg-slate-50 sticky top-0 text-slate-500">
-                            <tr>
-                                <th class="p-3 border-b">Ảnh (I)</th>
-                                <th class="p-3 border-b">Nhóm</th>
-                                <th class="p-3 border-b">Họ Tên</th>
-                                <th class="p-3 border-b">CCCD</th>
-                                <th class="p-3 border-b text-center">Pháp lý</th>
+                <div class="max-h-[60vh] overflow-y-auto">
+                    <table class="w-full text-left text-xs border-separate border-spacing-0">
+                        <thead class="bg-white sticky top-0 shadow-sm z-10">
+                            <tr class="text-slate-400 uppercase">
+                                <th class="p-4 border-b font-semibold">Ảnh (I)</th>
+                                <th class="p-4 border-b font-semibold">Phân Nhóm</th>
+                                <th class="p-4 border-b font-semibold">Họ và Tên</th>
+                                <th class="p-4 border-b font-semibold">Số CCCD</th>
+                                <th class="p-4 border-b text-center font-semibold">Trạng thái</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100">
-                            <tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Hệ thống đang chờ file...</td></tr>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-600">
+                            <tr><td colspan="5" class="p-20 text-center text-slate-300 italic">Vui lòng chọn file Excel để bắt đầu...</td></tr>
                         </tbody>
                     </table>
-                </div>
-                <div class="p-4 bg-slate-50 border-t flex justify-end">
-                    <button id="btn-save" class="hidden bg-emerald-600 text-white px-8 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:bg-emerald-700 transition">
-                        <i class="fas fa-save mr-2"></i> XÁC NHẬN & LƯU HỆ THỐNG
-                    </button>
                 </div>
             </div>
         </div>
     </main>
 
-    <script type="module">
+    <script>
         const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
         const tableBody = document.getElementById('table-body');
 
         dropZone.onclick = () => fileInput.click();
 
-        // Hàm tách ngày từ chuỗi "Từ ngày 01/01/2026 đến ngày 05/01/2026"
-        function parseDateRange(str) {
-            const dates = str.match(/\d{2}\/\d{2}\/\d{4}/g);
-            if (dates && dates.length >= 2) {
-                const d1 = new Date(dates[0].split('/').reverse().join('-'));
-                const d2 = new Date(dates[1].split('/').reverse().join('-'));
-                const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-                return { start: dates[0], end: dates[1], days: diffDays };
-            }
-            return null;
-        }
+        fileInput.addEventListener('change', handleFile);
 
-        fileInput.onchange = async (e) => {
+        async function handleFile(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.load(file);
-            const sheet = workbook.getWorksheet(1);
+            tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div><p class="mt-4 text-slate-500 font-medium">Đang bóc tách dữ liệu từ GitHub...</p></td></tr>';
 
-            // MST ở ô A4 theo yêu cầu mới của anh
-            const mst = sheet.getCell('A4').value?.toString().replace(/[^0-9]/g, "") || "---";
-            const cpn = sheet.getCell('A3').value?.toString().replace("Công ty:", "").trim() || "CHƯA RÕ";
-            const timeStr = sheet.getCell('A6').value?.toString() || "";
-            const dateData = parseDateRange(timeStr);
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const arrayBuffer = await file.arrayBuffer();
+                await workbook.xlsx.load(arrayBuffer);
+                
+                const sheet = workbook.getWorksheet(1);
+                
+                // Lấy thông tin cố định theo cấu trúc Chất Thép
+                const mst = sheet.getCell('A4').value?.toString() || "---";
+                const cpn = sheet.getCell('A3').value?.toString() || "KHÔNG XÁC ĐỊNH";
+                const timeStr = sheet.getCell('A6').value?.toString() || "";
 
-            document.getElementById('mst-display').innerText = mst;
-            document.getElementById('company-display').innerText = cpn.toUpperCase();
-            
-            let timeHTML = `<span class="text-xs font-mono text-slate-500">${timeStr}</span>`;
-            if (dateData) {
-                timeHTML += `<span class="ml-2 bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold">${dateData.days} NGÀY</span>`;
+                document.getElementById('mst-display').innerText = mst;
+                document.getElementById('company-display').innerText = cpn.toUpperCase();
+                document.getElementById('time-status').innerHTML = `<div class="bg-slate-800 text-white px-3 py-2 rounded-lg text-[10px] font-mono shadow-inner">${timeStr}</div>`;
+
+                tableBody.innerHTML = '';
+                let currentGroup = "N/A";
+                let studentCount = 0;
+                const rác = ["người lập", "giám đốc", "ngày", "tháng", "họ tên"];
+
+                sheet.eachRow((row, rowNumber) => {
+                    if (rowNumber >= 10) {
+                        const cellA = row.getCell(1).value?.toString().trim() || "";
+                        const cellB = row.getCell(2).value?.toString().trim() || "";
+
+                        // Phát hiện Nhóm (Cột A)
+                        if (cellA.toLowerCase().includes("nhóm")) {
+                            currentGroup = cellA;
+                            return;
+                        }
+
+                        // Lấy học viên (Cột B)
+                        if (cellB !== "" && !rác.some(w => cellB.toLowerCase().includes(w))) {
+                            const cccd = row.getCell(7).value?.toString() || "Trống";
+                            
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-emerald-50/50 transition-colors";
+                            tr.innerHTML = `
+                                <td class="p-4 text-center">
+                                    <div class="w-10 h-12 bg-slate-100 border-2 border-dashed border-slate-200 rounded flex items-center justify-center text-[8px] text-slate-400 uppercase">Ảnh I</div>
+                                </td>
+                                <td class="p-4 font-bold text-emerald-600 italic">${currentGroup}</td>
+                                <td class="p-4 font-bold text-slate-800">${cellB}</td>
+                                <td class="p-4 font-mono text-slate-500">${cccd}</td>
+                                <td class="p-4 text-center">
+                                    <span class="status-pill bg-emerald-100 text-emerald-700 inline-flex items-center">
+                                        <i class="fas fa-check-circle mr-1"></i> SẴN SÀNG
+                                    </span>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                            studentCount++;
+                        }
+                    }
+                });
+                document.getElementById('count-display').innerText = `${studentCount} Học viên`;
+
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi: Không thể đọc file. Hãy đảm bảo file đúng định dạng .xlsx");
+                tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-red-400">Đã xảy ra lỗi khi nạp file.</td></tr>';
             }
-            document.getElementById('time-status').innerHTML = timeHTML;
-
-            tableBody.innerHTML = '';
-            let currentGroup = "Chưa rõ";
-            let studentCount = 0;
-
-            sheet.eachRow((row, rowNumber) => {
-                if (rowNumber >= 10) {
-                    const colA = row.getCell(1).value?.toString().trim() || "";
-                    const colB = row.getCell(2).value?.toString().trim() || "";
-
-                    if (colA.toLowerCase().includes("nhóm")) {
-                        currentGroup = colA;
-                        return;
-                    }
-
-                    if (colB !== "" && !["người lập", "giám đốc", "ngày", "tháng"].some(w => colB.toLowerCase().includes(w))) {
-                        const cccd = row.getCell(7).value?.toString() || "Trống";
-                        
-                        // KIỂM TRA PHÁP LÝ
-                        let isLegal = true;
-                        let msg = "HỢP LỆ";
-                        if (currentGroup.includes("1") && dateData?.days < 2) { isLegal = false; msg = "THIẾU NGÀY (N1: 16h)"; }
-                        if (currentGroup.includes("2") && dateData?.days < 6) { isLegal = false; msg = "THIẾU NGÀY (N2: 48h)"; }
-                        if (currentGroup.includes("3") && dateData?.days < 3) { isLegal = false; msg = "THIẾU NGÀY (N3: 24h)"; }
-
-                        const statusClass = isLegal ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="p-3"><div class="w-8 h-10 bg-slate-100 border rounded flex items-center justify-center text-[8px] text-slate-400">ẢNH</div></td>
-                            <td class="p-3 font-bold text-blue-600">${currentGroup}</td>
-                            <td class="p-3 font-semibold text-slate-800">${colB}</td>
-                            <td class="p-3 font-mono">${cccd}</td>
-                            <td class="p-3 text-center"><span class="status-pill ${statusClass}">${msg}</span></td>
-                        `;
-                        tableBody.appendChild(tr);
-                        studentCount++;
-                    }
-                }
-            });
-            document.getElementById('count-display').innerText = `${studentCount} Học viên`;
-            document.getElementById('btn-save').classList.remove('hidden');
-        };
+        }
     </script>
 </body>
 </html>
