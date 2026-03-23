@@ -3,76 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.87 - Full Data Columns</title>
+    <title>VDC System V1.88 - Stable Excel Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { background-color: #0f172a; }
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .status-pill { font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; white-space: nowrap; }
-        /* Tối ưu bảng cho nhiều cột */
-        table { border-collapse: separate; border-spacing: 0; }
-        th { white-space: nowrap; sticky top: 0; background: #f8fafc; z-index: 10; }
-        td { white-space: nowrap; }
-        .truncate-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        th { sticky top: 0; background: #f8fafc; z-index: 20; border-bottom: 2px solid #e2e8f0; }
+        .truncate-cell { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
     <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex shadow-2xl">
-        <div class="p-6 text-xl font-bold border-b border-slate-700 text-center uppercase tracking-widest text-emerald-400">
-            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400">Version 1.87</span>
+        <div class="p-6 text-xl font-bold border-b border-slate-700 text-center uppercase text-emerald-400">
+            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400">Version 1.88</span>
         </div>
-        <nav class="flex-1 mt-4">
-            <div class="p-4 bg-emerald-600/10 border-l-4 border-emerald-500 text-emerald-400 font-bold">
-                <i class="fas fa-file-excel mr-3"></i> Nạp Dữ Liệu Excel
+        <nav class="flex-1 mt-4 px-2">
+            <div class="p-4 bg-emerald-600/20 border-l-4 border-emerald-500 text-emerald-400 font-bold rounded-r-lg">
+                <i class="fas fa-file-excel mr-3"></i> Nạp File TTHV
             </div>
         </nav>
-        <div class="p-4 border-t border-slate-700 text-[10px] font-mono text-slate-500 italic">
-            MST (A4): <span id="mst-display" class="text-emerald-500">---</span>
+        <div class="p-4 border-t border-slate-700 text-[10px] font-mono text-slate-500">
+            MST (A4): <span id="mst-display" class="text-emerald-500 font-bold">---</span>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden">
-        <header class="h-14 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-            <h2 class="text-xs font-bold text-slate-700 uppercase" id="company-display">Chờ nạp file...</h2>
-            <div id="time-status" class="text-[10px] font-bold text-slate-500"></div>
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Đơn vị huấn luyện</span>
+                <h2 class="text-sm font-bold text-slate-700 uppercase" id="company-display">CHỜ NẠP FILE EXCEL...</h2>
+            </div>
+            <div id="time-status" class="text-xs font-mono bg-slate-100 p-2 rounded border border-slate-200"></div>
         </header>
 
-        <div class="p-4 overflow-y-auto space-y-4">
-            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-200 p-6 rounded-xl text-center cursor-pointer hover:bg-emerald-50 transition-all">
-                <i class="fas fa-upload text-2xl text-emerald-500 mb-2"></i>
-                <p class="text-xs font-bold text-slate-600">Kéo & Thả file TTHV.xlsx (Dòng 11+)</p>
+        <div class="p-6 overflow-y-auto space-y-6">
+            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-300 p-10 rounded-2xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm">
+                <div class="bg-emerald-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-cloud-upload-alt text-xl text-emerald-600"></i>
+                </div>
+                <p class="text-sm font-bold text-slate-600">Bấm để chọn hoặc Kéo thả file Excel (.xlsx)</p>
+                <p class="text-[10px] text-slate-400 mt-1 italic">Hệ thống tự động bóc ảnh I, dữ liệu từ B-H và MST A4</p>
                 <input type="file" id="file-input" class="hidden" accept=".xlsx">
             </div>
 
             <div class="card overflow-hidden border border-slate-200">
-                <div class="p-3 border-b bg-slate-50 flex justify-between items-center px-4">
-                    <h3 class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Bảng trích xuất chi tiết (9 Cột)</h3>
-                    <span id="count-display" class="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold">0 HV</span>
+                <div class="p-4 border-b bg-slate-50 flex justify-between items-center px-6">
+                    <h3 class="text-[10px] font-extrabold uppercase text-slate-500 tracking-widest">Dữ liệu học viên chi tiết (Dòng 11+)</h3>
+                    <span id="count-display" class="bg-emerald-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-sm">0 HV</span>
                 </div>
                 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)]">
-                    <table class="w-full text-left text-[11px]">
-                        <thead class="text-slate-500 uppercase font-bold border-b">
-                            <tr>
-                                <th class="p-3 border-r">Ảnh (I)</th>
-                                <th class="p-3 border-r">Nhóm</th>
-                                <th class="p-3 border-r">Họ và Tên (B)</th>
-                                <th class="p-3 border-r">Phái (C)</th>
-                                <th class="p-3 border-r">Ngày sinh (D)</th>
-                                <th class="p-3 border-r">Quốc tịch (E)</th>
-                                <th class="p-3 border-r">Công việc (F)</th>
-                                <th class="p-3 border-r">CCCD (G)</th>
-                                <th class="p-3 border-r">Nội dung HL (H)</th>
-                                <th class="p-3 text-center">Lệnh</th>
+                <div class="overflow-auto max-h-[calc(100vh-320px)] border-t">
+                    <table class="w-full text-left text-[11px] min-w-[1000px]">
+                        <thead>
+                            <tr class="text-slate-500 uppercase font-bold">
+                                <th class="p-4 border-r">Ảnh (I)</th>
+                                <th class="p-4 border-r">Nhóm (A)</th>
+                                <th class="p-4 border-r">Họ Tên (B)</th>
+                                <th class="p-4 border-r text-center">Phái (C)</th>
+                                <th class="p-4 border-r">Ngày sinh (D)</th>
+                                <th class="p-4 border-r">Quốc tịch (E)</th>
+                                <th class="p-4 border-r">Công việc (F)</th>
+                                <th class="p-4 border-r">CCCD (G)</th>
+                                <th class="p-4 border-r">Nội dung (H)</th>
+                                <th class="p-4 text-center">In</th>
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
-                            <tr><td colspan="10" class="p-20 text-center text-slate-300 italic">Vui lòng chọn file Excel...</td></tr>
+                            <tr><td colspan="10" class="p-20 text-center text-slate-300 italic">Hệ thống đang sẵn sàng xử lý file Excel của anh.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -91,90 +93,91 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-xl text-emerald-500"></i></td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i><br><span class="text-xs mt-2 block">Đang nạp dữ liệu vào Buffer...</span></td></tr>';
 
-            try {
-                const workbook = new ExcelJS.Workbook();
-                const arrayBuffer = await file.arrayBuffer();
-                await workbook.xlsx.load(arrayBuffer);
-                const sheet = workbook.getWorksheet(1);
+            // Dùng FileReader để ép trình duyệt đọc đúng cấu trúc nhị phân của XLSX
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(event.target.result);
+                    const sheet = workbook.getWorksheet(1);
 
-                // Header info
-                const mst = sheet.getCell('A4').value?.toString().replace(/[^0-9]/g, "") || "---";
-                const company = sheet.getCell('A3').value?.toString().replace("Công ty:", "").trim() || "---";
-                const timeStr = sheet.getCell('A6').value?.toString() || "";
+                    // Trích xuất Header
+                    const mst = sheet.getCell('A4').value?.toString().replace(/[^0-9]/g, "") || "---";
+                    const company = sheet.getCell('A3').value?.toString().replace("Công ty:", "").trim() || "CHƯA RÕ";
+                    const timeStr = sheet.getCell('A6').value?.toString() || "";
 
-                document.getElementById('mst-display').innerText = mst;
-                document.getElementById('company-display').innerText = company.toUpperCase();
-                document.getElementById('time-status').innerText = timeStr;
+                    document.getElementById('mst-display').innerText = mst;
+                    document.getElementById('company-display').innerText = company.toUpperCase();
+                    document.getElementById('time-status').innerText = timeStr;
 
-                // Bóc ảnh (Cột I = 9)
-                const imageMap = {};
-                sheet.getImages().forEach(img => {
-                    const row = Math.floor(img.range.tl.row) + 1;
-                    const col = Math.floor(img.range.tl.col) + 1;
-                    if (col === 9) imageMap[row] = workbook.getImage(img.imageId).buffer;
-                });
+                    // Quét ảnh cột I (Col 9)
+                    const imageMap = {};
+                    sheet.getImages().forEach(img => {
+                        const row = Math.floor(img.range.tl.row) + 1;
+                        const col = Math.floor(img.range.tl.col) + 1;
+                        if (col === 9) imageMap[row] = workbook.getImage(img.imageId).buffer;
+                    });
 
-                tableBody.innerHTML = '';
-                let currentGroup = "N/A";
-                let count = 0;
+                    tableBody.innerHTML = '';
+                    let currentGroup = "---";
+                    let count = 0;
 
-                sheet.eachRow((row, rowNumber) => {
-                    if (rowNumber >= 10) {
-                        const colA = row.getCell(1).value?.toString().trim() || "";
-                        const colB = row.getCell(2).value?.toString().trim() || "";
+                    sheet.eachRow((row, rowNumber) => {
+                        if (rowNumber >= 10) {
+                            const valA = row.getCell(1).value?.toString().trim() || "";
+                            const valB = row.getCell(2).value?.toString().trim() || "";
 
-                        // Làm sạch tên nhóm: Chỉ lấy "Nhóm X"
-                        if (colA.toLowerCase().includes("nhóm")) {
-                            const match = colA.match(/Nhóm\s+\d+/i);
-                            currentGroup = match ? match[0] : colA;
-                            return;
-                        }
-
-                        // Lọc dòng học viên
-                        if (colB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => colB.toLowerCase().includes(w))) {
-                            const gender = row.getCell(3).value || "";
-                            const dob = row.getCell(4).value || "";
-                            const nation = row.getCell(5).value || "";
-                            const job = row.getCell(6).value || "";
-                            const cccd = row.getCell(7).value?.toString() || "";
-                            const content = row.getCell(8).value?.toString() || "";
-
-                            let imgHTML = '<div class="w-8 h-10 bg-slate-100 flex items-center justify-center text-[8px] text-slate-300">TRỐNG</div>';
-                            if (imageMap[rowNumber]) {
-                                const url = URL.createObjectURL(new Blob([imageMap[rowNumber]]));
-                                imgHTML = `<img src="${url}" class="w-8 h-10 object-cover rounded shadow-sm">`;
+                            // Làm sạch tên Nhóm
+                            if (valA.toLowerCase().includes("nhóm")) {
+                                const match = valA.match(/Nhóm\s+\d+/i);
+                                currentGroup = match ? match[0] : valA;
+                                return;
                             }
 
-                            const tr = document.createElement('tr');
-                            tr.className = "hover:bg-slate-50 transition-colors";
-                            tr.innerHTML = `
-                                <td class="p-2 border-r text-center">${imgHTML}</td>
-                                <td class="p-2 border-r font-bold text-blue-600 uppercase">${currentGroup}</td>
-                                <td class="p-2 border-r font-bold text-slate-800">${colB}</td>
-                                <td class="p-2 border-r text-center">${gender}</td>
-                                <td class="p-2 border-r">${dob}</td>
-                                <td class="p-2 border-r">${nation}</td>
-                                <td class="p-2 border-r truncate-cell" title="${job}">${job}</td>
-                                <td class="p-2 border-r font-mono font-bold">${cccd}</td>
-                                <td class="p-2 border-r truncate-cell text-slate-500" title="${content}">${content}</td>
-                                <td class="p-2 text-center">
-                                    <a href="vdc-print://export?id=${cccd}" class="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 shadow-sm inline-block">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                </td>
-                            `;
-                            tableBody.appendChild(tr);
-                            count++;
+                            // Quét dữ liệu học viên (Bỏ qua dòng ký tên)
+                            if (valB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => valB.toLowerCase().includes(w))) {
+                                const tr = document.createElement('tr');
+                                tr.className = "hover:bg-slate-50 transition-colors border-b";
+
+                                // Render ảnh từ Buffer
+                                let imgTag = '<div class="w-8 h-10 bg-slate-100 border border-dashed flex items-center justify-center text-[7px] text-slate-300 uppercase mx-auto">TRỐNG I</div>';
+                                if (imageMap[rowNumber]) {
+                                    const blob = new Blob([imageMap[rowNumber]]);
+                                    const url = URL.createObjectURL(blob);
+                                    imgTag = `<img src="${url}" class="w-8 h-10 object-cover rounded shadow-sm mx-auto border border-slate-200">`;
+                                }
+
+                                tr.innerHTML = `
+                                    <td class="p-2 border-r text-center">${imgTag}</td>
+                                    <td class="p-2 border-r font-bold text-blue-600 text-[10px] uppercase">${currentGroup}</td>
+                                    <td class="p-2 border-r font-bold text-slate-800">${valB}</td>
+                                    <td class="p-2 border-r text-center">${row.getCell(3).value || ""}</td>
+                                    <td class="p-2 border-r">${row.getCell(4).value || ""}</td>
+                                    <td class="p-2 border-r">${row.getCell(5).value || ""}</td>
+                                    <td class="p-2 border-r truncate-cell" title="${row.getCell(6).value}">${row.getCell(6).value || ""}</td>
+                                    <td class="p-2 border-r font-mono font-bold">${row.getCell(7).value || ""}</td>
+                                    <td class="p-2 border-r truncate-cell text-slate-500" title="${row.getCell(8).value}">${row.getCell(8).value || ""}</td>
+                                    <td class="p-2 text-center">
+                                        <a href="vdc-print://export?id=${row.getCell(7).value}" class="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 shadow-sm inline-block">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </td>
+                                `;
+                                tableBody.appendChild(tr);
+                                count++;
+                            }
                         }
-                    }
-                });
-                document.getElementById('count-display').innerText = count + " HV";
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi đọc file!");
-            }
+                    });
+                    document.getElementById('count-display').innerText = count + " HV";
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi đọc file! Anh hãy kiểm tra file có đúng định dạng .xlsx chuẩn không.");
+                    tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold">LỖI ĐỊNH DẠNG FILE (.XLSX)</td></tr>';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         });
     </script>
 </body>
