@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.84 - Bypass Format Error</title>
+    <title>VDC System V1.85 - Stable Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -13,17 +13,17 @@
         .sidebar { background-color: #0f172a; }
         .drop-zone { border: 2px dashed #cbd5e1; background: white; cursor: pointer; transition: 0.3s; }
         .drop-zone:hover { border-color: #10b981; background-color: #f0fdf4; }
-        .img-preview { width: 40px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
     <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex">
         <div class="p-6 text-xl font-bold border-b border-slate-700 text-center text-emerald-400">
-            VDC SYSTEM <span class="text-xs block font-normal text-slate-400">v1.84 @ForceRead</span>
+            VDC SYSTEM <span class="text-xs block font-normal text-slate-400">v1.85 @Stable</span>
         </div>
-        <div class="mt-auto p-4 border-t border-slate-700 text-[10px] text-slate-500 uppercase tracking-widest">
-            MST (Ô A4): <span id="mst-display" class="text-emerald-500 font-bold block text-sm">---</span>
+        <div class="mt-auto p-4 border-t border-slate-700">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">MST (A4)</p>
+            <p id="mst-display" class="font-mono text-emerald-500 font-bold text-sm">---</p>
         </div>
     </aside>
 
@@ -34,29 +34,27 @@
 
         <div class="p-6 overflow-y-auto space-y-6">
             <div id="drop-zone" class="drop-zone p-10 rounded-2xl text-center shadow-sm border-2">
-                <i class="fas fa-file-import text-3xl text-emerald-500 mb-2"></i>
-                <h3 class="text-slate-700 font-bold italic">Bấm chọn hoặc Kéo thả file Excel vào đây</h3>
+                <i class="fas fa-file-excel text-3xl text-emerald-500 mb-2"></i>
+                <h3 class="text-slate-700 font-bold italic">Bấm chọn hoặc Kéo thả file TTHV.xlsx vào đây</h3>
                 <input type="file" id="file-input" class="hidden">
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Danh sách học viên trích xuất</span>
-                    <span id="count-display" class="text-xs font-bold text-emerald-600">0 HV</span>
+                    <span id="count-display" class="text-xs font-bold text-emerald-600 uppercase">Dữ liệu học viên</span>
                 </div>
                 <div class="max-h-[60vh] overflow-y-auto">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-white sticky top-0 shadow-sm z-10">
-                            <tr class="text-slate-400 uppercase">
-                                <th class="p-4 border-b">Ảnh (I)</th>
-                                <th class="p-4 border-b">Nhóm (A)</th>
-                                <th class="p-4 border-b">Họ và Tên (B)</th>
-                                <th class="p-4 border-b">CCCD (G)</th>
-                                <th class="p-4 border-b">Trạng thái</th>
+                        <thead class="bg-white sticky top-0 shadow-sm z-10 text-slate-400 uppercase">
+                            <tr>
+                                <th class="p-4 border-b">Nhóm</th>
+                                <th class="p-4 border-b">Họ và Tên</th>
+                                <th class="p-4 border-b">CCCD</th>
+                                <th class="p-4 border-b text-center">Trạng thái</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-600">
-                            <tr><td colspan="5" class="p-20 text-center text-slate-300">Chưa có dữ liệu.</td></tr>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-600 font-medium">
+                            <tr><td colspan="4" class="p-20 text-center text-slate-300 italic font-normal">Đang chờ anh nạp file .xlsx chuẩn...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -71,81 +69,61 @@
 
         dropZone.onclick = () => fileInput.click();
 
-        fileInput.addEventListener('change', async (e) => {
+        fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i><br>Đang giải mã file Excel...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" class="p-20 text-center"><i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i><br>Đang quét dữ liệu...</td></tr>';
 
-            try {
-                const workbook = new ExcelJS.Workbook();
-                const arrayBuffer = await file.arrayBuffer();
-                await workbook.xlsx.load(arrayBuffer);
-                
-                const sheet = workbook.getWorksheet(1);
-                
-                // Lấy thông tin MST A4 và Cty A3
-                document.getElementById('mst-display').innerText = sheet.getCell('A4').value?.toString() || "---";
-                document.getElementById('company-display').innerText = (sheet.getCell('A3').value?.toString() || "CHƯA RÕ").toUpperCase();
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                // Lấy danh sách ảnh trong file (Cột I)
-                const imageMap = {};
-                workbook.model.media.forEach((media, index) => {
-                    if (media.type === 'image') {
-                        // Tìm vị trí của ảnh trong sheet
-                        const imgData = sheet.getImages().find(i => i.imageId === index.toString());
-                        if (imgData) {
-                            const row = Math.floor(imgData.range.tl.row) + 1;
-                            imageMap[row] = workbook.getImage(imgData.imageId).buffer;
-                        }
-                    }
-                });
+                    // Lấy MST (A4), Tên Cty (A3)
+                    document.getElementById('mst-display').innerText = firstSheet['A4'] ? firstSheet['A4'].v : "---";
+                    document.getElementById('company-display').innerText = (firstSheet['A3'] ? firstSheet['A3'].v : "CHƯA RÕ").toUpperCase();
 
-                tableBody.innerHTML = '';
-                let currentGroup = "N/A";
-                let count = 0;
+                    // Chuyển Sheet sang dạng JSON
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    tableBody.innerHTML = '';
+                    let currentGroup = "N/A";
+                    let count = 0;
 
-                sheet.eachRow((row, rowNumber) => {
-                    if (rowNumber >= 10) {
-                        const cellA = row.getCell(1).value?.toString().trim() || "";
-                        const cellB = row.getCell(2).value?.toString().trim() || "";
+                    jsonData.forEach((row, index) => {
+                        if (index < 9) return; // Bỏ qua 10 dòng đầu
 
-                        if (cellA.toLowerCase().includes("nhóm")) {
-                            currentGroup = cellA;
-                            return;
-                        }
+                        const colA = row[0] ? row[0].toString().trim() : "";
+                        const colB = row[1] ? row[1].toString().trim() : "";
 
-                        if (cellB !== "" && !["người lập", "giám đốc", "ngày", "tháng", "họ tên"].some(w => cellB.toLowerCase().includes(w))) {
-                            const cccd = row.getCell(7).value?.toString() || "---";
+                        if (colA.toLowerCase().includes("nhóm")) {
+                            currentGroup = colA;
+                        } else if (colB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => colB.toLowerCase().includes(w))) {
+                            const cccd = row[6] || "---"; // Cột G
                             
-                            // Xử lý hiển thị ảnh thẻ từ cột I
-                            let imgTag = '<div class="w-10 h-12 bg-slate-100 rounded border border-dashed flex items-center justify-center text-[8px] text-slate-300">TRỐNG</div>';
-                            if (imageMap[rowNumber]) {
-                                const blob = new Blob([imageMap[rowNumber]], { type: 'image/png' });
-                                const url = URL.createObjectURL(blob);
-                                imgTag = `<img src="${url}" class="img-preview shadow-sm">`;
-                            }
-
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                                <td class="p-3">${imgTag}</td>
-                                <td class="p-3 font-bold text-blue-600">${currentGroup}</td>
-                                <td class="p-3 font-bold text-slate-800">${cellB}</td>
-                                <td class="p-3 font-mono">${cccd}</td>
-                                <td class="p-3 text-center"><span class="bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold text-[10px]">SẴN SÀNG</span></td>
+                                <td class="p-4 font-bold text-blue-600 italic">${currentGroup}</td>
+                                <td class="p-4 font-bold text-slate-800">${colB}</td>
+                                <td class="p-4 font-mono">${cccd}</td>
+                                <td class="p-4 text-center"><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold">SẴN SÀNG</span></td>
                             `;
                             tableBody.appendChild(tr);
                             count++;
                         }
-                    }
-                });
-                document.getElementById('count-display').innerText = count + " Học viên";
+                    });
+                    document.getElementById('count-display').innerText = `Đã tìm thấy ${count} học viên`;
 
-            } catch (err) {
-                console.error("Lỗi chi tiết:", err);
-                alert("Lỗi đọc file! Anh hãy chắc chắn dùng file .xlsx chuẩn (không phải .csv). Nếu vẫn lỗi, hãy thử lưu file bằng tên khác không dấu.");
-                tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-red-500 font-bold">LỖI ĐỊNH DẠNG FILE</td></tr>';
-            }
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi đọc file! Anh hãy thử lưu file ở định dạng 'Excel Workbook (*.xlsx)' thay vì các định dạng khác.");
+                    tableBody.innerHTML = '<tr><td colspan="4" class="p-20 text-center text-red-500">LỖI XỬ LÝ DỮ LIỆU</td></tr>';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         });
     </script>
 </body>
