@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.78 - Quản lý Đào tạo</title>
+    <title>VDC System V1.80 - Quản lý Đào tạo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -11,152 +11,152 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .sidebar { background-color: #0f172a; }
-        .nav-item:hover { background-color: #1e293b; border-left: 4px solid #10b981; }
-        .active-nav { background-color: #1e293b; border-left: 4px solid #10b981; }
         .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; }
         .drop-zone.over { border-color: #10b981; background-color: #f0fdf4; }
+        .status-pill { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 9999px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
     <aside class="sidebar w-64 text-white flex flex-col hidden md:flex">
         <div class="p-6 text-xl font-bold border-b border-slate-700 text-center">
-            VDC INTERNATIONAL
-            <span class="text-xs block font-normal text-emerald-400">Phiên bản 1.78</span>
+            VDC SYSTEM
+            <span class="text-xs block font-normal text-emerald-400">Phiên bản 1.80</span>
         </div>
         <nav class="flex-1 mt-4">
-            <a href="#" class="nav-item active-nav flex items-center p-4"><i class="fas fa-home mr-3"></i> Dashboard</a>
-            <a href="#" class="nav-item flex items-center p-4 text-emerald-400 font-bold"><i class="fas fa-file-upload mr-3"></i> Nạp Dữ Liệu (Excel)</a>
-            <a href="#" class="nav-item flex items-center p-4"><i class="fas fa-user-graduate mr-3"></i> Danh sách Học viên</a>
-            <a href="#" class="nav-item flex items-center p-4"><i class="fas fa-history mr-3"></i> Lịch sử Cấp thẻ</a>
+            <a href="#" class="flex items-center p-4 bg-slate-800 border-l-4 border-emerald-500"><i class="fas fa-file-upload mr-3"></i> Nạp Dữ Liệu Excel</a>
         </nav>
-        <div class="p-4 border-t border-slate-700 text-xs text-slate-400 italic">
-            User: Trần Công Đẹp (Admin)
+        <div class="p-4 border-t border-slate-700 text-[10px] text-slate-400 uppercase">
+            MST (Ô A4): <span id="mst-display">---</span>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col">
         <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-700">HỆ THỐNG QUẢN LÝ ĐÀO TẠO VDC 2026</h2>
-            <div class="flex items-center space-x-4">
-                <span class="text-xs bg-slate-100 p-2 rounded text-slate-500 font-mono">Firebase: vdcdaotao-bb832</span>
-            </div>
+            <h2 class="text-sm font-bold text-slate-700 uppercase" id="company-display">CHƯA CÓ DỮ LIỆU CÔNG TY</h2>
+            <div id="time-status" class="flex items-center space-x-2">
+                </div>
         </header>
 
-        <div class="p-8 overflow-y-auto space-y-8">
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-bold uppercase text-slate-500 mb-4 tracking-widest">1. NẠP DỮ LIỆU HỌC VIÊN</h3>
-                <div id="drop-zone" class="drop-zone p-10 rounded-lg text-center cursor-pointer">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-slate-300 mb-3"></i>
-                    <p class="text-slate-500">Kéo thả file Excel (có ảnh trong cell) vào đây hoặc <span class="text-blue-500 font-bold">Bấm để chọn</span></p>
-                    <input type="file" id="file-input" class="hidden" accept=".xlsx">
-                </div>
-            </section>
+        <div class="p-6 overflow-y-auto space-y-6">
+            <div id="drop-zone" class="drop-zone p-8 rounded-xl text-center cursor-pointer bg-white shadow-sm">
+                <i class="fas fa-file-excel text-3xl text-emerald-500 mb-2"></i>
+                <p class="text-sm text-slate-600 font-medium">Kéo thả file Excel vào đây (MST ở ô A4)</p>
+                <input type="file" id="file-input" class="hidden" accept=".xlsx">
+            </div>
 
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h3 class="text-sm font-bold uppercase text-slate-700">2. KIỂM TRA DỮ LIỆU & PHÁP LÝ</h3>
-                    <div id="legal-summary" class="hidden text-xs font-bold text-slate-500"></div>
+                    <h3 class="text-xs font-bold uppercase text-slate-700">KIỂM TRA ĐIỀU KIỆN PHÁP LÝ (NĐ 44/2016)</h3>
+                    <span id="count-display" class="text-xs font-bold text-emerald-600">0 Học viên</span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm" id="preview-table">
-                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                <div class="max-h-[500px] overflow-y-auto">
+                    <table class="w-full text-left text-xs" id="preview-table">
+                        <thead class="bg-slate-50 sticky top-0 text-slate-500">
                             <tr>
-                                <th class="p-4 border-b">Ảnh</th>
-                                <th class="p-4 border-b">Họ và Tên</th>
-                                <th class="p-4 border-b">CCCD</th>
-                                <th class="p-4 border-b">Nhóm</th>
-                                <th class="p-4 border-b">Thời gian HL</th>
-                                <th class="p-4 border-b text-center">Trạng thái</th>
+                                <th class="p-3 border-b">Ảnh (I)</th>
+                                <th class="p-3 border-b">Nhóm</th>
+                                <th class="p-3 border-b">Họ Tên</th>
+                                <th class="p-3 border-b">CCCD</th>
+                                <th class="p-3 border-b text-center">Pháp lý</th>
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100">
-                            <tr><td colspan="6" class="p-10 text-center text-slate-400 italic">Chưa có dữ liệu nạp...</td></tr>
+                            <tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Hệ thống đang chờ file...</td></tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4 bg-slate-50 border-t flex justify-end space-x-4">
-                    <button id="btn-save" class="hidden bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition">
-                        <i class="fas fa-cloud-download-alt mr-2"></i> LƯU LÊN CLOUD (FIREBASE & DRIVE)
+                <div class="p-4 bg-slate-50 border-t flex justify-end">
+                    <button id="btn-save" class="hidden bg-emerald-600 text-white px-8 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:bg-emerald-700 transition">
+                        <i class="fas fa-save mr-2"></i> XÁC NHẬN & LƯU HỆ THỐNG
                     </button>
                 </div>
-            </section>
+            </div>
         </div>
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // CONFIG FIREBASE CỦA ANH CÔNG ĐẸP
-        const firebaseConfig = {
-            apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
-            authDomain: "vdcdaotao-bb832.firebaseapp.com",
-            projectId: "vdcdaotao-bb832",
-            storageBucket: "vdcdaotao-bb832.firebasestorage.app",
-            messagingSenderId: "1033996249004",
-            appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
-            measurementId: "G-CJRQYVBQSW"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // LOGIC BÓC ẢNH VÀ ĐỌC EXCEL
-        const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
         const tableBody = document.getElementById('table-body');
 
         dropZone.onclick = () => fileInput.click();
+
+        // Hàm tách ngày từ chuỗi "Từ ngày 01/01/2026 đến ngày 05/01/2026"
+        function parseDateRange(str) {
+            const dates = str.match(/\d{2}\/\d{2}\/\d{4}/g);
+            if (dates && dates.length >= 2) {
+                const d1 = new Date(dates[0].split('/').reverse().join('-'));
+                const d2 = new Date(dates[1].split('/').reverse().join('-'));
+                const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                return { start: dates[0], end: dates[1], days: diffDays };
+            }
+            return null;
+        }
 
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center"><i class="fas fa-spinner fa-spin mr-2"></i> Đang bóc tách ảnh từ Cell...</td></tr>';
-            
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(file);
             const sheet = workbook.getWorksheet(1);
+
+            // MST ở ô A4 theo yêu cầu mới của anh
+            const mst = sheet.getCell('A4').value?.toString().replace(/[^0-9]/g, "") || "---";
+            const cpn = sheet.getCell('A3').value?.toString().replace("Công ty:", "").trim() || "CHƯA RÕ";
+            const timeStr = sheet.getCell('A6').value?.toString() || "";
+            const dateData = parseDateRange(timeStr);
+
+            document.getElementById('mst-display').innerText = mst;
+            document.getElementById('company-display').innerText = cpn.toUpperCase();
             
-            // Lấy danh sách ảnh trong file
-            const images = workbook.model.media;
-            const imageMap = {};
-            images.forEach(img => {
-                // Xác định vị trí ảnh (row/col)
-                // Lưu ý: ExcelJS dùng 0-base cho row index trong media
-            });
+            let timeHTML = `<span class="text-xs font-mono text-slate-500">${timeStr}</span>`;
+            if (dateData) {
+                timeHTML += `<span class="ml-2 bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold">${dateData.days} NGÀY</span>`;
+            }
+            document.getElementById('time-status').innerHTML = timeHTML;
 
             tableBody.innerHTML = '';
-            let count = 0;
+            let currentGroup = "Chưa rõ";
+            let studentCount = 0;
 
             sheet.eachRow((row, rowNumber) => {
-                if (rowNumber >= 11) { // Bắt đầu từ dòng 11 như phôi của anh
-                    const name = row.getCell(2).value;
-                    const cccd = row.getCell(7).value;
-                    const nhom = "Nhóm 3"; // Giả lập logic quét nhóm
-                    
-                    if (name && name.toString().trim() !== "") {
+                if (rowNumber >= 10) {
+                    const colA = row.getCell(1).value?.toString().trim() || "";
+                    const colB = row.getCell(2).value?.toString().trim() || "";
+
+                    if (colA.toLowerCase().includes("nhóm")) {
+                        currentGroup = colA;
+                        return;
+                    }
+
+                    if (colB !== "" && !["người lập", "giám đốc", "ngày", "tháng"].some(w => colB.toLowerCase().includes(w))) {
+                        const cccd = row.getCell(7).value?.toString() || "Trống";
+                        
+                        // KIỂM TRA PHÁP LÝ
+                        let isLegal = true;
+                        let msg = "HỢP LỆ";
+                        if (currentGroup.includes("1") && dateData?.days < 2) { isLegal = false; msg = "THIẾU NGÀY (N1: 16h)"; }
+                        if (currentGroup.includes("2") && dateData?.days < 6) { isLegal = false; msg = "THIẾU NGÀY (N2: 48h)"; }
+                        if (currentGroup.includes("3") && dateData?.days < 3) { isLegal = false; msg = "THIẾU NGÀY (N3: 24h)"; }
+
+                        const statusClass = isLegal ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+
                         const tr = document.createElement('tr');
-                        tr.className = "hover:bg-blue-50 transition";
                         tr.innerHTML = `
-                            <td class="p-4"><div class="w-10 h-12 bg-slate-200 rounded border flex items-center justify-center text-[10px] text-slate-400">ẢNH</div></td>
-                            <td class="p-4 font-bold text-slate-700">${name}</td>
-                            <td class="p-4 font-mono">${cccd || 'N/A'}</td>
-                            <td class="p-4 text-xs font-bold text-blue-600">${nhom}</td>
-                            <td class="p-4 text-xs">24/03 - 26/03</td>
-                            <td class="p-4 text-center">
-                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold">
-                                    <i class="fas fa-check"></i> ĐỦ 48G
-                                </span>
-                            </td>
+                            <td class="p-3"><div class="w-8 h-10 bg-slate-100 border rounded flex items-center justify-center text-[8px] text-slate-400">ẢNH</div></td>
+                            <td class="p-3 font-bold text-blue-600">${currentGroup}</td>
+                            <td class="p-3 font-semibold text-slate-800">${colB}</td>
+                            <td class="p-3 font-mono">${cccd}</td>
+                            <td class="p-3 text-center"><span class="status-pill ${statusClass}">${msg}</span></td>
                         `;
                         tableBody.appendChild(tr);
-                        count++;
+                        studentCount++;
                     }
                 }
             });
-
+            document.getElementById('count-display').innerText = `${studentCount} Học viên`;
             document.getElementById('btn-save').classList.remove('hidden');
         };
     </script>
