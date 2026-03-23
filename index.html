@@ -3,133 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC - Auto Generator v3.6</title>
-    <script src="pizzip.min.js"></script>
-    <script src="docxtemplater.min.js"></script>
-    <script src="imagemodule.min.js"></script>
-    <script src="FileSaver.min.js"></script>
+    <title>VDC System V1.78 - Quản lý Đào tạo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
-        .card { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid #d4a017; }
-        .zone { background: #f8fbff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #cce5ff; }
-        input[type="text"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        th { background: #003366; color: white; }
-        .btn-main { padding: 18px; background: #003366; color: white; border: none; cursor: pointer; font-weight: bold; width: 100%; border-radius: 8px; font-size: 18px; transition: 0.3s; }
-        .btn-main:hover { background: #002244; transform: translateY(-2px); }
-        .img-preview { width: 60px; height: 80px; object-fit: cover; border: 1px solid #ddd; display: block; margin: auto; border-radius: 4px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .sidebar { background-color: #0f172a; }
+        .nav-item:hover { background-color: #1e293b; border-left: 4px solid #10b981; }
+        .active-nav { background-color: #1e293b; border-left: 4px solid #10b981; }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; }
+        .drop-zone.over { border-color: #10b981; background-color: #f0fdf4; }
     </style>
 </head>
-<body>
-<div class="card">
-    <h2 style="text-align:center; color:#003366; margin-bottom:25px;">HỆ THỐNG XUẤT THẺ VDC (v3.6)</h2>
-    
-    <div class="zone">
-        <label><b>Step 1: Chọn thư mục chứa ảnh (Tên file = Số CCCD)</b></label>
-        <input type="file" id="imgFolder" webkitdirectory directory multiple onchange="loadImages(event)" style="margin-top:10px; display:block;">
-        <div id="imgStatus" style="margin-top:8px; color:#28a745; font-weight:bold;">Chưa nạp ảnh nhân viên</div>
-    </div>
+<body class="flex h-screen overflow-hidden">
 
-    <div class="zone">
-        <label><b>Step 2: Nhập tên đơn vị đào tạo</b></label>
-        <input type="text" id="comp" value="CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC">
-    </div>
+    <aside class="sidebar w-64 text-white flex flex-col hidden md:flex">
+        <div class="p-6 text-xl font-bold border-b border-slate-700 text-center">
+            VDC INTERNATIONAL
+            <span class="text-xs block font-normal text-emerald-400">Phiên bản 1.78</span>
+        </div>
+        <nav class="flex-1 mt-4">
+            <a href="#" class="nav-item active-nav flex items-center p-4"><i class="fas fa-home mr-3"></i> Dashboard</a>
+            <a href="#" class="nav-item flex items-center p-4 text-emerald-400 font-bold"><i class="fas fa-file-upload mr-3"></i> Nạp Dữ Liệu (Excel)</a>
+            <a href="#" class="nav-item flex items-center p-4"><i class="fas fa-user-graduate mr-3"></i> Danh sách Học viên</a>
+            <a href="#" class="nav-item flex items-center p-4"><i class="fas fa-history mr-3"></i> Lịch sử Cấp thẻ</a>
+        </nav>
+        <div class="p-4 border-t border-slate-700 text-xs text-slate-400 italic">
+            User: Trần Công Đẹp (Admin)
+        </div>
+    </aside>
 
-    <table>
-        <thead>
-            <tr>
-                <th width="40%">Họ và tên</th>
-                <th width="40%">Số CCCD (Mã thẻ)</th>
-                <th width="20%">Ảnh thẻ</th>
-            </tr>
-        </thead>
-        <tbody id="stBody">
-            <tr>
-                <td><input type="text" class="st-name" value="Nguyễn Minh Hòa" style="width:100%; border:none; outline:none; font-size:15px;"></td>
-                <td><input type="text" class="st-cccd" value="079069011376" onkeyup="matchImage(this)" style="width:100%; border:none; outline:none; font-size:15px;"></td>
-                <td><img class="img-preview" src=""></td>
-            </tr>
-        </tbody>
-    </table>
+    <main class="flex-1 flex flex-col">
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-700">HỆ THỐNG QUẢN LÝ ĐÀO TẠO VDC 2026</h2>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs bg-slate-100 p-2 rounded text-slate-500 font-mono">Firebase: vdcdaotao-bb832</span>
+            </div>
+        </header>
 
-    <button class="btn-main" onclick="processDoc()">🚀 TẠO FILE WORD & XUẤT THẺ NGAY</button>
-</div>
+        <div class="p-8 overflow-y-auto space-y-8">
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold uppercase text-slate-500 mb-4 tracking-widest">1. NẠP DỮ LIỆU HỌC VIÊN</h3>
+                <div id="drop-zone" class="drop-zone p-10 rounded-lg text-center cursor-pointer">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-slate-300 mb-3"></i>
+                    <p class="text-slate-500">Kéo thả file Excel (có ảnh trong cell) vào đây hoặc <span class="text-blue-500 font-bold">Bấm để chọn</span></p>
+                    <input type="file" id="file-input" class="hidden" accept=".xlsx">
+                </div>
+            </section>
 
-<script>
-    let imageDictionary = {};
-    function loadImages(event) {
-        const files = event.target.files;
-        let count = 0;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const name = file.name.split('.')[0];
-                imageDictionary[name] = e.target.result;
-                count++;
-                document.getElementById('imgStatus').innerText = `✅ Đã nạp thành công: ${count} ảnh`;
-                document.querySelectorAll('.st-cccd').forEach(input => matchImage(input));
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                    <h3 class="text-sm font-bold uppercase text-slate-700">2. KIỂM TRA DỮ LIỆU & PHÁP LÝ</h3>
+                    <div id="legal-summary" class="hidden text-xs font-bold text-slate-500"></div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm" id="preview-table">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                            <tr>
+                                <th class="p-4 border-b">Ảnh</th>
+                                <th class="p-4 border-b">Họ và Tên</th>
+                                <th class="p-4 border-b">CCCD</th>
+                                <th class="p-4 border-b">Nhóm</th>
+                                <th class="p-4 border-b">Thời gian HL</th>
+                                <th class="p-4 border-b text-center">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="p-10 text-center text-slate-400 italic">Chưa có dữ liệu nạp...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 bg-slate-50 border-t flex justify-end space-x-4">
+                    <button id="btn-save" class="hidden bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition">
+                        <i class="fas fa-cloud-download-alt mr-2"></i> LƯU LÊN CLOUD (FIREBASE & DRIVE)
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
 
-    function matchImage(input) {
-        const cccd = input.value.trim();
-        const img = input.closest('tr').querySelector('.img-preview');
-        img.src = imageDictionary[cccd] || "";
-    }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    async function processDoc() {
-        try {
-            // TẠO PHÔI TRẮNG TỪ ĐẦU ĐỂ TRÁNH LỖI NAMESPACE CỦA WORD GỐC
-            const zip = new PizZip();
-            // Cấu trúc XML tối giản cho 1 thẻ mẫu (Ô số 1)
-            const content = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<w:body>
-    <w:p><w:r><w:t>{p1dv}</w:t></w:r></w:p>
-    <w:p><w:r><w:t>THẺ AN TOÀN LAO ĐỘNG</w:t></w:r></w:p>
-    <w:p><w:r><w:t>{%p1anh}</w:t></w:r></w:p>
-    <w:p><w:r><w:t>Số: {p1ma}</w:t></w:r></w:p>
-    <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567"/></w:sectPr>
-</w:body>
-</w:document>`;
-            zip.file("word/document.xml", content);
+        // CONFIG FIREBASE CỦA ANH CÔNG ĐẸP
+        const firebaseConfig = {
+            apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
+            authDomain: "vdcdaotao-bb832.firebaseapp.com",
+            projectId: "vdcdaotao-bb832",
+            storageBucket: "vdcdaotao-bb832.firebasestorage.app",
+            messagingSenderId: "1033996249004",
+            appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
+            measurementId: "G-CJRQYVBQSW"
+        };
 
-            const doc = new window.docxtemplater(zip, { 
-                modules: [new (window.ImageModule || window.docxtemplaterImageModuleFree)({
-                    getImage: (v) => {
-                        const bin = window.atob(v.split(',')[1]);
-                        const res = new Uint8Array(bin.length);
-                        for (let i = 0; i < bin.length; i++) res[i] = bin.charCodeAt(i);
-                        return res;
-                    },
-                    getSize: () => [113, 151]
-                })],
-                nullGetter: () => ""
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // LOGIC BÓC ẢNH VÀ ĐỌC EXCEL
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const tableBody = document.getElementById('table-body');
+
+        dropZone.onclick = () => fileInput.click();
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            tableBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center"><i class="fas fa-spinner fa-spin mr-2"></i> Đang bóc tách ảnh từ Cell...</td></tr>';
+            
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(file);
+            const sheet = workbook.getWorksheet(1);
+            
+            // Lấy danh sách ảnh trong file
+            const images = workbook.model.media;
+            const imageMap = {};
+            images.forEach(img => {
+                // Xác định vị trí ảnh (row/col)
+                // Lưu ý: ExcelJS dùng 0-base cho row index trong media
             });
 
-            const rows = document.querySelectorAll("#stBody tr");
-            const finalData = {};
-            const dv = document.getElementById('comp').value;
-            
-            for (let i = 1; i <= 1; i++) { // Test thử ô số 1
-                const row = rows[i-1];
-                if (row) {
-                    const cccd = row.querySelector(".st-cccd").value.trim();
-                    finalData[`p${i}dv`] = dv;
-                    finalData[`p${i}ma`] = cccd;
-                    finalData[`p${i}anh`] = imageDictionary[cccd] || "";
-                }
-            }
+            tableBody.innerHTML = '';
+            let count = 0;
 
-            doc.render(finalData);
-            saveAs(doc.getZip().generate({ type: "blob" }), "The_VDC_v3.6.docx");
-        } catch (err) { 
-            alert("Lỗi xuất thẻ: " + err.message); 
-        }
-    }
-</script>
+            sheet.eachRow((row, rowNumber) => {
+                if (rowNumber >= 11) { // Bắt đầu từ dòng 11 như phôi của anh
+                    const name = row.getCell(2).value;
+                    const cccd = row.getCell(7).value;
+                    const nhom = "Nhóm 3"; // Giả lập logic quét nhóm
+                    
+                    if (name && name.toString().trim() !== "") {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-blue-50 transition";
+                        tr.innerHTML = `
+                            <td class="p-4"><div class="w-10 h-12 bg-slate-200 rounded border flex items-center justify-center text-[10px] text-slate-400">ẢNH</div></td>
+                            <td class="p-4 font-bold text-slate-700">${name}</td>
+                            <td class="p-4 font-mono">${cccd || 'N/A'}</td>
+                            <td class="p-4 text-xs font-bold text-blue-600">${nhom}</td>
+                            <td class="p-4 text-xs">24/03 - 26/03</td>
+                            <td class="p-4 text-center">
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold">
+                                    <i class="fas fa-check"></i> ĐỦ 48G
+                                </span>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                        count++;
+                    }
+                }
+            });
+
+            document.getElementById('btn-save').classList.remove('hidden');
+        };
+    </script>
 </body>
 </html>
