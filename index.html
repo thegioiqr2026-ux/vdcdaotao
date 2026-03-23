@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.82 - GitHub Deploy</title>
+    <title>VDC System V1.83 - Fix Định Dạng File</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -12,7 +12,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { background-color: #0f172a; }
         .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; cursor: pointer; background: white; }
-        .drop-zone:hover { border-color: #10b981; background-color: #f0fdf4; }
+        .drop-zone.error { border-color: #ef4444; background-color: #fef2f2; }
         .status-pill { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 9999px; }
     </style>
 </head>
@@ -20,59 +20,51 @@
 
     <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex">
         <div class="p-6 text-xl font-bold border-b border-slate-700 text-center text-emerald-400">
-            VDC SYSTEM <span class="text-xs block font-normal text-slate-400">v1.82 @GitHub</span>
+            VDC SYSTEM <span class="text-xs block font-normal text-slate-400">v1.83 @GitHub</span>
         </div>
         <nav class="flex-1 mt-6">
             <a href="#" class="flex items-center p-4 bg-emerald-600/10 border-l-4 border-emerald-500 text-emerald-400">
-                <i class="fas fa-upload mr-3"></i> Nạp File Excel
-            </a>
-            <a href="#" class="flex items-center p-4 hover:bg-slate-800 transition text-slate-400">
-                <i class="fas fa-database mr-3"></i> Dữ liệu Firebase
+                <i class="fas fa-upload mr-3"></i> Nạp File Excel (.xlsx)
             </a>
         </nav>
         <div class="p-4 border-t border-slate-700">
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Mã số thuế (A4)</p>
-            <p id="mst-display" class="font-mono text-emerald-500 font-bold">---</p>
+            <p id="mst-display" class="font-mono text-emerald-500 font-bold text-xs">MST: ---</p>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0">
         <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-            <div class="flex flex-col">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Đơn vị huấn luyện</h2>
-                <h1 id="company-display" class="text-sm font-bold text-slate-800">CHỜ TẢI FILE EXCEL...</h1>
-            </div>
-            <div id="time-status" class="flex items-center"></div>
+            <h1 id="company-display" class="text-sm font-bold text-slate-800 uppercase">CHỜ FILE EXCEL CHUẨN (.XLSX)</h1>
+            <div id="time-status"></div>
         </header>
 
         <div class="p-6 overflow-y-auto space-y-6">
             <div id="drop-zone" class="drop-zone p-12 rounded-2xl text-center shadow-sm border-2">
-                <div class="bg-emerald-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div id="icon-container" class="bg-emerald-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-file-excel text-2xl text-emerald-600"></i>
                 </div>
-                <h3 class="text-slate-700 font-bold">Kéo & Thả file thông tin học viên</h3>
-                <p class="text-slate-400 text-sm mt-1">Hệ thống tự động bóc ảnh tại Cột I và MST tại ô A4</p>
+                <h3 id="drop-text" class="text-slate-700 font-bold">Kéo & Thả file ".xlsx" có chứa ảnh</h3>
+                <p class="text-slate-400 text-sm mt-1">Lưu ý: Không dùng file .csv vì sẽ mất ảnh thẻ</p>
                 <input type="file" id="file-input" class="hidden" accept=".xlsx">
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h3 class="text-xs font-extrabold uppercase text-slate-500 tracking-widest">Danh sách trích xuất</h3>
-                    <span id="count-display" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold">0 Học viên</span>
+                <div id="table-header" class="p-4 border-b bg-slate-50 flex justify-between items-center italic text-xs text-slate-400">
+                    Sẵn sàng trích xuất dữ liệu từ dòng 11...
                 </div>
                 <div class="max-h-[60vh] overflow-y-auto">
                     <table class="w-full text-left text-xs border-separate border-spacing-0">
                         <thead class="bg-white sticky top-0 shadow-sm z-10">
                             <tr class="text-slate-400 uppercase">
-                                <th class="p-4 border-b font-semibold">Ảnh (I)</th>
-                                <th class="p-4 border-b font-semibold">Phân Nhóm</th>
-                                <th class="p-4 border-b font-semibold">Họ và Tên</th>
-                                <th class="p-4 border-b font-semibold">Số CCCD</th>
-                                <th class="p-4 border-b text-center font-semibold">Trạng thái</th>
+                                <th class="p-4 border-b">Ảnh (I)</th>
+                                <th class="p-4 border-b">Nhóm</th>
+                                <th class="p-4 border-b">Họ Tên</th>
+                                <th class="p-4 border-b">CCCD</th>
+                                <th class="p-4 border-b text-center">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100 text-slate-600">
-                            <tr><td colspan="5" class="p-20 text-center text-slate-300 italic">Vui lòng chọn file Excel để bắt đầu...</td></tr>
+                            <tr><td colspan="5" class="p-20 text-center text-slate-300">Vui lòng chọn file Excel gốc (.xlsx)</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -84,81 +76,77 @@
         const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
         const tableBody = document.getElementById('table-body');
+        const dropText = document.getElementById('drop-text');
 
         dropZone.onclick = () => fileInput.click();
 
-        fileInput.addEventListener('change', handleFile);
-
-        async function handleFile(e) {
+        fileInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div><p class="mt-4 text-slate-500 font-medium">Đang bóc tách dữ liệu từ GitHub...</p></td></tr>';
+            // KIỂM TRA ĐỊNH DẠNG NGAY LẬP TỨC
+            if (!file.name.endsWith('.xlsx')) {
+                dropZone.classList.add('error');
+                dropText.innerHTML = `<span class="text-red-600">LỖI: FILE KHÔNG ĐÚNG ĐỊNH DẠNG .XLSX</span>`;
+                alert("Anh Công Đẹp ơi, file này là đuôi " + file.name.split('.').pop() + ". Anh hãy dùng file Excel gốc (.xlsx) thì máy mới bóc được ảnh thẻ nhé!");
+                return;
+            }
+
+            dropZone.classList.remove('error');
+            dropText.innerText = "Đang xử lý file: " + file.name;
+            tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center"><i class="fas fa-sync fa-spin text-2xl text-emerald-500"></i></td></tr>';
 
             try {
                 const workbook = new ExcelJS.Workbook();
                 const arrayBuffer = await file.arrayBuffer();
                 await workbook.xlsx.load(arrayBuffer);
-                
                 const sheet = workbook.getWorksheet(1);
                 
-                // Lấy thông tin cố định theo cấu trúc Chất Thép
+                // Trích xuất dữ liệu như các bản trước
                 const mst = sheet.getCell('A4').value?.toString() || "---";
                 const cpn = sheet.getCell('A3').value?.toString() || "KHÔNG XÁC ĐỊNH";
                 const timeStr = sheet.getCell('A6').value?.toString() || "";
 
-                document.getElementById('mst-display').innerText = mst;
+                document.getElementById('mst-display').innerText = "MST: " + mst;
                 document.getElementById('company-display').innerText = cpn.toUpperCase();
-                document.getElementById('time-status').innerHTML = `<div class="bg-slate-800 text-white px-3 py-2 rounded-lg text-[10px] font-mono shadow-inner">${timeStr}</div>`;
+                document.getElementById('time-status').innerHTML = `<span class="bg-slate-800 text-white px-3 py-1 rounded text-[10px] font-mono">${timeStr}</span>`;
 
                 tableBody.innerHTML = '';
                 let currentGroup = "N/A";
-                let studentCount = 0;
-                const rác = ["người lập", "giám đốc", "ngày", "tháng", "họ tên"];
+                let count = 0;
 
                 sheet.eachRow((row, rowNumber) => {
                     if (rowNumber >= 10) {
                         const cellA = row.getCell(1).value?.toString().trim() || "";
                         const cellB = row.getCell(2).value?.toString().trim() || "";
 
-                        // Phát hiện Nhóm (Cột A)
                         if (cellA.toLowerCase().includes("nhóm")) {
                             currentGroup = cellA;
                             return;
                         }
 
-                        // Lấy học viên (Cột B)
-                        if (cellB !== "" && !rác.some(w => cellB.toLowerCase().includes(w))) {
-                            const cccd = row.getCell(7).value?.toString() || "Trống";
-                            
+                        if (cellB !== "" && !["người lập", "giám đốc", "ngày", "tháng"].some(w => cellB.toLowerCase().includes(w))) {
+                            const cccd = row.getCell(7).value?.toString() || "---";
                             const tr = document.createElement('tr');
-                            tr.className = "hover:bg-emerald-50/50 transition-colors";
                             tr.innerHTML = `
-                                <td class="p-4 text-center">
-                                    <div class="w-10 h-12 bg-slate-100 border-2 border-dashed border-slate-200 rounded flex items-center justify-center text-[8px] text-slate-400 uppercase">Ảnh I</div>
-                                </td>
-                                <td class="p-4 font-bold text-emerald-600 italic">${currentGroup}</td>
+                                <td class="p-4 text-center"><div class="w-8 h-10 bg-slate-100 rounded border border-dashed flex items-center justify-center text-[8px] text-slate-400">ẢNH I</div></td>
+                                <td class="p-4 font-bold text-emerald-600">${currentGroup}</td>
                                 <td class="p-4 font-bold text-slate-800">${cellB}</td>
-                                <td class="p-4 font-mono text-slate-500">${cccd}</td>
-                                <td class="p-4 text-center">
-                                    <span class="status-pill bg-emerald-100 text-emerald-700 inline-flex items-center">
-                                        <i class="fas fa-check-circle mr-1"></i> SẴN SÀNG
-                                    </span>
-                                </td>
+                                <td class="p-4 font-mono">${cccd}</td>
+                                <td class="p-4 text-center"><span class="status-pill bg-green-100 text-green-700">OK</span></td>
                             `;
                             tableBody.appendChild(tr);
-                            studentCount++;
+                            count++;
                         }
                     }
                 });
-                document.getElementById('count-display').innerText = `${studentCount} Học viên`;
+                document.getElementById('table-header').innerText = `Đã tìm thấy ${count} học viên trong file.`;
 
             } catch (err) {
                 console.error(err);
-                alert("Lỗi: Không thể đọc file. Hãy đảm bảo file đúng định dạng .xlsx");
-                tableBody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-red-400">Đã xảy ra lỗi khi nạp file.</td></tr>';
+                alert("Có lỗi khi đọc nội dung file. Anh hãy chắc chắn đây là file Excel được lưu trực tiếp từ Microsoft Excel.");
             }
-        }
+        });
     </script>
 </body>
 </html>
