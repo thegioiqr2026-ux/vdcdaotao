@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC System V1.91 - Fix Image Extraction</title>
+    <title>VDC System V1.92 - Fix Image & CCCD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -11,9 +11,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { background-color: #0f172a; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .card { background: white; border-radius: 12px; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         th { position: sticky; top: 0; background: #f8fafc; z-index: 20; border-bottom: 2px solid #e2e8f0; }
-        .img-preview { width: 42px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; }
+        .img-card { width: 45px; height: 55px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; }
         .truncate-cell { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
@@ -21,11 +21,11 @@
 
     <aside class="sidebar w-64 text-white flex flex-col hidden lg:flex shadow-2xl">
         <div class="p-6 text-xl font-bold border-b border-slate-700 text-center uppercase text-emerald-400">
-            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400 italic">Version 1.91 @FixImage</span>
+            VDC SYSTEM <span class="text-[10px] block font-normal text-slate-400 italic">Version 1.92</span>
         </div>
         <nav class="flex-1 mt-4 px-2 italic text-xs">
             <div class="p-4 bg-emerald-600/20 border-l-4 border-emerald-500 text-emerald-400 font-bold rounded-r-lg">
-                <i class="fas fa-camera-retro mr-3"></i> Nạp File & Bóc Ảnh
+                <i class="fas fa-id-badge mr-3"></i> Trích xuất dữ liệu thẻ
             </div>
         </nav>
         <div class="p-4 border-t border-slate-700 text-[10px] font-mono text-slate-500">
@@ -35,20 +35,20 @@
 
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-tight" id="company-display">CHỜ NẠP FILE "CHẤT THÉP"...</h2>
-            <div id="time-status" class="text-xs font-mono bg-slate-100 p-2 rounded border"></div>
+            <h2 class="text-sm font-bold text-slate-700 uppercase" id="company-display">DỮ LIỆU ĐÀO TẠO VDC 2026</h2>
+            <div id="time-status" class="text-[10px] font-mono bg-slate-100 p-2 rounded border border-slate-200"></div>
         </header>
 
         <div class="p-6 overflow-y-auto space-y-6">
-            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-300 p-8 rounded-2xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+            <div id="drop-zone" class="bg-white border-2 border-dashed border-slate-300 p-8 rounded-2xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm">
                 <i class="fas fa-file-excel text-3xl text-emerald-500 mb-2"></i>
-                <p class="text-sm font-bold text-slate-600 uppercase italic">Kéo thả file .xlsx có ảnh Cột I</p>
+                <p class="text-sm font-bold text-slate-600 uppercase italic underline">Bấm để nạp file TTHV.xlsx gốc</p>
                 <input type="file" id="file-input" class="hidden" accept=".xlsx">
             </div>
 
             <div class="card overflow-hidden border border-slate-200">
                 <div class="p-3 bg-slate-50 border-b flex justify-between items-center px-6">
-                    <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest italic">Dữ liệu từ dòng 10+</span>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest italic">Quét từ dòng 10+ | Cột I chứa ảnh</span>
                     <span id="count-display" class="bg-emerald-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-sm">0 HV</span>
                 </div>
                 
@@ -63,13 +63,13 @@
                                 <th class="p-4 border-b border-r">Ngày sinh (D)</th>
                                 <th class="p-4 border-b border-r">Quốc tịch (E)</th>
                                 <th class="p-4 border-b border-r">Công việc (F)</th>
-                                <th class="p-4 border-b border-r">CCCD (G)</th>
+                                <th class="p-4 border-b border-r text-emerald-700">CCCD (G)</th>
                                 <th class="p-4 border-b border-r text-slate-400 italic font-normal">Nội dung (H)</th>
-                                <th class="p-4 border-b text-center">Lệnh</th>
+                                <th class="p-4 border-b text-center">In</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                            <tr><td colspan="10" class="p-24 text-center text-slate-300 italic">Vui lòng chọn file Excel gốc để bóc ảnh Cột I...</td></tr>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700 font-medium bg-white">
+                            <tr><td colspan="10" class="p-24 text-center text-slate-300 italic">Vui lòng chọn file .xlsx để bóc ảnh và chuẩn hóa CCCD.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -88,7 +88,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center"><i class="fas fa-sync fa-spin text-2xl text-emerald-500 mb-3"></i><br><span class="text-xs italic text-slate-500">Đang quét Deep Media & chuẩn hóa CCCD...</span></td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center"><i class="fas fa-sync fa-spin text-2xl text-emerald-500 mb-3"></i><br><span class="text-xs italic text-slate-500">Đang bóc ảnh từ Cột I & làm sạch 12 số CCCD...</span></td></tr>';
 
             try {
                 const workbook = new ExcelJS.Workbook();
@@ -101,18 +101,15 @@
                 document.getElementById('company-display').innerText = (sheet.getCell('A3').value?.toString() || "---").toUpperCase();
                 document.getElementById('time-status').innerText = sheet.getCell('A6').value?.toString() || "";
 
-                // BÓC ẢNH CHI TIẾT
+                // BÓC ẢNH THEO DÒNG (Dùng kỹ thuật quét tọa độ Image Range)
                 const imageMap = {};
                 const images = sheet.getImages();
                 images.forEach(img => {
-                    // ExcelJS image range: tl = top-left, br = bottom-right
-                    // Chúng ta lấy dòng dựa trên top-left row (0-based)
                     const row = Math.floor(img.range.tl.row) + 1;
                     const col = Math.floor(img.range.tl.col) + 1;
-                    
-                    if (col >= 8 && col <= 10) { // Cột H, I, J (Thường ảnh cột I sẽ nằm trong vùng này)
-                        const image = workbook.getImage(img.imageId);
-                        imageMap[row] = image.buffer;
+                    // Chấp nhận ảnh nằm ở Cột I (col 9) hoặc lân cận (8, 10)
+                    if (col >= 8 && col <= 10) {
+                        imageMap[row] = workbook.getImage(img.imageId).buffer;
                     }
                 });
 
@@ -121,42 +118,46 @@
                 let count = 0;
 
                 sheet.eachRow((row, rowNumber) => {
+                    // Quét từ dòng 10 trở đi theo ý anh
                     if (rowNumber >= 10) {
-                        const valA = row.getCell(1).value?.toString().trim() || "";
-                        const valB = row.getCell(2).value?.toString().trim() || "";
+                        const cellA = row.getCell(1).value?.toString().trim() || "";
+                        const cellB = row.getCell(2).value?.toString().trim() || "";
 
-                        if (valA.toLowerCase().includes("nhóm")) {
-                            const match = valA.match(/Nhóm\s+\d+/i);
-                            currentGroup = match ? match[0] : valA;
-                            if (valB === "") return;
+                        // Cập nhật Nhóm
+                        if (cellA.toLowerCase().includes("nhóm")) {
+                            const cleanGroupName = cellA.match(/Nhóm\s+\d+/i);
+                            currentGroup = cleanGroupName ? cleanGroupName[0] : cellA;
+                            if (cellB === "") return; // Nếu chỉ là dòng tiêu đề nhóm thì bỏ qua
                         }
 
-                        if (valB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => valB.toLowerCase().includes(w))) {
+                        // Lọc dòng học viên thực sự
+                        if (cellB !== "" && !["người lập", "giám đốc", "họ tên"].some(w => cellB.toLowerCase().includes(w))) {
                             
-                            // CHUẨN HÓA CCCD: Xóa sạch mọi loại khoảng trắng
+                            // CHUẨN HÓA CCCD: Xóa sạch mọi khoảng trắng (dù nhập kiểu 079 012...)
                             let cccdRaw = row.getCell(7).value?.toString() || "";
                             let cccdClean = cccdRaw.replace(/\s+/g, '');
 
-                            // RENDER ẢNH THẺ
-                            let imgHTML = '<div class="w-10 h-12 bg-slate-50 border border-dashed rounded flex items-center justify-center text-[7px] text-slate-300">TRỐNG I</div>';
+                            // HIỂN THỊ ẢNH THẺ
+                            let imgTag = '<div class="w-8 h-10 bg-slate-50 border border-dashed rounded flex items-center justify-center text-[7px] text-slate-300">NO IMG</div>';
                             if (imageMap[rowNumber]) {
-                                const url = URL.createObjectURL(new Blob([imageMap[rowNumber]]));
-                                imgHTML = `<img src="${url}" class="img-preview mx-auto shadow-sm">`;
+                                const blob = new Blob([imageMap[rowNumber]]);
+                                const url = URL.createObjectURL(blob);
+                                imgTag = `<img src="${url}" class="img-card mx-auto shadow-sm">`;
                             }
 
                             const tr = document.createElement('tr');
                             tr.className = "hover:bg-slate-50 transition-colors border-b";
                             tr.innerHTML = `
-                                <td class="p-2 text-center border-r bg-white sticky left-0 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">${imgHTML}</td>
+                                <td class="p-2 text-center border-r bg-white sticky left-0 z-10">${imgTag}</td>
                                 <td class="p-2 border-r font-bold text-blue-600 uppercase italic">${currentGroup}</td>
-                                <td class="p-2 border-r font-bold text-slate-800">${valB}</td>
+                                <td class="p-2 border-r font-bold text-slate-800">${cellB}</td>
                                 <td class="p-2 border-r text-center">${row.getCell(3).value || ""}</td>
                                 <td class="p-2 border-r">${row.getCell(4).value || ""}</td>
                                 <td class="p-2 border-r text-[10px]">${row.getCell(5).value || ""}</td>
                                 <td class="p-2 border-r truncate-cell" title="${row.getCell(6).value}">${row.getCell(6).value || ""}</td>
                                 <td class="p-2 border-r font-mono font-bold text-emerald-700">${cccdClean}</td>
                                 <td class="p-2 border-r truncate-cell text-slate-400 italic" title="${row.getCell(8).value}">${row.getCell(8).value || ""}</td>
-                                <td class="p-2 text-center sticky right-0 bg-white shadow-[-2px_0_5px_rgba(0,0,0,0.02)]">
+                                <td class="p-2 text-center bg-white sticky right-0 z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.02)]">
                                     <a href="vdc-print://export?id=${cccdClean}" class="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 transition shadow-sm inline-block">
                                         <i class="fas fa-print"></i>
                                     </a>
@@ -170,9 +171,9 @@
                 document.getElementById('count-display').innerText = count + " HV";
 
             } catch (err) {
-                console.error("DEBUG VDC:", err);
-                alert("Lỗi đọc file! Hãy chắc chắn anh đã chọn đúng file .xlsx được lưu từ Excel.");
-                tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold italic">LỖI CẤU TRÚC FILE - HÃY THỬ LƯU LẠI FILE .XLSX</td></tr>';
+                console.error("LỖI HỆ THỐNG VDC:", err);
+                alert("Lỗi bóc tách ảnh! Anh Công Đẹp lưu ý: Hãy sử dụng file Excel gốc (.xlsx) và đảm bảo ảnh chân dung nằm gọn trong cột I.");
+                tableBody.innerHTML = '<tr><td colspan="10" class="p-20 text-center text-red-500 font-bold italic">LỖI ĐỊNH DẠNG FILE (.XLSX)</td></tr>';
             }
         });
     </script>
