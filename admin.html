@@ -3,18 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Admin - Quản lý truy cập</title>
+    <title>VDC Admin - Quản lý truy cập & Thống kê</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #3498db; color: white; }
         tr:hover { background-color: #f1f1f1; }
-        .btn-toggle { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-toggle { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s;}
         .btn-allow { background-color: #2ecc71; }
+        .btn-allow:hover { background-color: #27ae60; }
         .btn-block { background-color: #e74c3c; }
+        .btn-block:hover { background-color: #c0392b; }
+        .btn-history { background-color: #f39c12; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.3s;}
+        .btn-history:hover { background-color: #e67e22; }
+        
+        /* Giao diện Cửa sổ Lịch sử (Modal) */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 85%; max-width: 800px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
+        .modal h3 { margin-top: 0; color: #2c3e50; }
+        .modal-table th { background-color: #34495e; }
     </style>
     <!-- Tích hợp Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -22,19 +34,39 @@
 </head>
 <body>
     <div class="container">
-        <h2>THỐNG KÊ NGƯỜI DÙNG PHẦN MỀM VDC</h2>
+        <h2>BẢNG ĐIỀU KHIỂN & THỐNG KÊ VDC SYSTEM</h2>
         <table>
             <thead>
                 <tr>
                     <th>Email Người Dùng</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
+                    <th>Trạng thái truy cập</th>
+                    <th>Hành động (Click để điều khiển)</th>
                 </tr>
             </thead>
             <tbody id="user-table-body">
-                <tr><td colspan="3" style="text-align: center;">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="3" style="text-align: center;">Đang tải dữ liệu từ máy chủ...</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Cửa sổ hiển thị lịch sử sử dụng -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title">Lịch sử sử dụng</h3>
+            <table class="modal-table">
+                <thead>
+                    <tr>
+                        <th>Giờ mở phần mềm</th>
+                        <th>Giờ tắt phần mềm</th>
+                        <th>Thời lượng dùng</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -50,7 +82,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Lắng nghe dữ liệu
+        let usageData = {}; // Biến lưu trữ toàn bộ lịch sử dùng
+
+        // Lắng nghe dữ liệu Lịch sử sử dụng liên tục
+        db.ref('UsageLogs').on('value', (snapshot) => {
+            usageData = snapshot.val() || {};
+        });
+
+        // Lắng nghe dữ liệu Quản lý tài khoản
         db.ref('AccessControl').on('value', (snapshot) => {
             const tbody = document.getElementById('user-table-body');
             tbody.innerHTML = '';
@@ -63,25 +102,84 @@
 
             for (let key in data) {
                 let user = data[key];
-                let statusText = user.allowed ? "<span style='color:green;font-weight:bold;'>Đang hoạt động</span>" : "<span style='color:red;font-weight:bold;'>Đã bị khóa</span>";
+                let statusText = user.allowed ? "<span style='color:green;font-weight:bold;'>Đang được phép dùng</span>" : "<span style='color:red;font-weight:bold;'>Đã bị Khóa</span>";
                 let btnClass = user.allowed ? "btn-block" : "btn-allow";
-                let btnText = user.allowed ? "Khóa ngay" : "Mở khóa";
+                let btnText = user.allowed ? "Khóa tài khoản" : "Mở khóa";
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${user.email}</td>
+                    <td><b>${user.email}</b></td>
                     <td>${statusText}</td>
-                    <td><button class="btn-toggle ${btnClass}" onclick="toggleAccess('${key}', ${!user.allowed})">${btnText}</button></td>
+                    <td>
+                        <button class="btn-toggle ${btnClass}" onclick="toggleAccess('${key}', ${!user.allowed})">🔒 ${btnText}</button>
+                        <button class="btn-history" onclick="showHistory('${key}', '${user.email}')">📊 Xem lịch sử</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             }
         });
 
-        // Hàm thay đổi quyền
+        // Hàm thay đổi quyền (Khóa/Mở)
         window.toggleAccess = function(key, newStatus) {
             db.ref('AccessControl/' + key).update({ allowed: newStatus })
               .then(() => alert("Cập nhật quyền thành công!"))
               .catch(err => alert("Lỗi: " + err.message));
+        }
+
+        // Hàm hiển thị Cửa sổ Lịch sử
+        window.showHistory = function(safeEmail, emailStr) {
+            const historyBody = document.getElementById('history-table-body');
+            historyBody.innerHTML = '';
+            document.getElementById('modal-title').innerText = 'Thống kê phiên làm việc của: ' + emailStr;
+            
+            if (usageData[safeEmail]) {
+                const sessions = usageData[safeEmail];
+                // Sắp xếp lịch sử mới nhất lên đầu
+                const sessionKeys = Object.keys(sessions).sort().reverse(); 
+                
+                sessionKeys.forEach(key => {
+                    const session = sessions[key];
+                    let loginStr = session.login_time ? new Date(session.login_time).toLocaleString('vi-VN') : 'Lỗi';
+                    let logoutStr = '---';
+                    let duration = '---';
+                    
+                    if (session.logout_time) {
+                        logoutStr = new Date(session.logout_time).toLocaleString('vi-VN');
+                        const diffMs = new Date(session.logout_time) - new Date(session.login_time);
+                        const diffMins = Math.round(diffMs / 60000); // Đổi ra phút
+                        if (diffMins < 1) duration = 'Dưới 1 phút';
+                        else duration = diffMins + ' phút';
+                    }
+                    
+                    let statusBadge = session.status === 'Đang dùng' ? '<span style="color:#3498db;font-weight:bold;">Đang online</span>' : '<span style="color:#7f8c8d;">Đã tắt</span>';
+
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${loginStr}</td>
+                        <td>${logoutStr}</td>
+                        <td><b>${duration}</b></td>
+                        <td>${statusBadge}</td>
+                    `;
+                    historyBody.appendChild(tr);
+                });
+            } else {
+                historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử sử dụng phần mềm</td></tr>';
+            }
+            
+            document.getElementById('historyModal').style.display = 'block';
+        }
+
+        // Hàm đóng cửa sổ
+        window.closeModal = function() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        // Bấm ra ngoài rìa để đóng cửa sổ
+        window.onclick = function(event) {
+            const modal = document.getElementById('historyModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
         }
     </script>
 </body>
