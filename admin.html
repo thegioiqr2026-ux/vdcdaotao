@@ -1,268 +1,88 @@
-import customtkinter as ctk
-from tkinter import filedialog, messagebox, ttk
-import pandas as pd
-import os, threading, datetime, re, base64, requests, sys
-from PIL import Image
-from docxtpl import DocxTemplate, InlineImage
-from docx.shared import Mm
-import jinja2
-from openpyxl import load_workbook
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDC Admin - Quản lý truy cập</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #3498db; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .btn-toggle { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-allow { background-color: #2ecc71; }
+        .btn-block { background-color: #e74c3c; }
+    </style>
+    <!-- Tích hợp Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>THỐNG KÊ NGƯỜI DÙNG PHẦN MỀM VDC</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Email Người Dùng</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="user-table-body">
+                <tr><td colspan="3" style="text-align: center;">Đang tải dữ liệu...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-FIREBASE_URL = "https://tavietnam-78ae8.firebaseio.com"
+    <script>
+        // Cấu hình Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzWjfcD5Dgq7V-i2izb9tKLR6QM6qWPQo",
+            authDomain: "tavietnam-78ae8.firebaseapp.com",
+            projectId: "tavietnam-78ae8",
+            storageBucket: "tavietnam-78ae8.firebasestorage.app",
+            messagingSenderId: "670121705534",
+            appId: "1:670121705534:web:1027ad98550573ad37116f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-# ================= BỘ BẢO MẶT TOKEN =================
-def verify_launch_token():
-    if len(sys.argv) < 2:
-        messagebox.showerror("Cảnh báo bảo mật", "Truy cập trái phép! Vui lòng mở phần mềm thông qua VDC Launcher.")
-        sys.exit()
-    
-    token = sys.argv[1]
-    try:
-        res = requests.get(f"{FIREBASE_URL}/Tokens/{token}.json", timeout=5)
-        if res.json() is None:
-            messagebox.showerror("Cảnh báo bảo mật", "Phiên làm việc không hợp lệ hoặc đã hết hạn!")
-            sys.exit()
-        # Xóa token ngay lập tức để không ai dùng lại được (Bảo mật 1 lần)
-        requests.delete(f"{FIREBASE_URL}/Tokens/{token}.json")
-    except:
-        messagebox.showerror("Lỗi", "Không thể xác thực với máy chủ. Kiểm tra lại mạng!")
-        sys.exit()
-
-class VDC_Professional_V195(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.version = "V1.95"
-        self.title(f"VDC INTERNATIONAL - AUTO SMART SYNC {self.version}")
-        self.after(0, lambda: self.wm_state('zoomed'))
-        
-        self.FIREBASE_URL = FIREBASE_URL
-        self.APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzfRE_ebzyDj4UFlBAB51CgAYIEAhiVga6KG4MDMESoYadVrNSg-aESB8Ad-KqJN6l/exec"
-        
-        self.paths = {"ex": "", "wd": "", "fo": ""}
-        self.students = []
-        self.mst = ""
-        self.tu_ngay = "..."
-        self.den_ngay = "..."
-        self.img_cache = {}
-        
-        self.card_configs = {
-            "Thẻ ATVSLĐ (9 thẻ/trang)": {"file": "The44_mattruoc.docx", "per_page": 9},
-            "Thẻ AT điện (8 thẻ/trang)": {"file": "the62_mattruoc.docx", "per_page": 8},
-            "Giấy chứng nhận (1 chứng nhận/trang)": {"file": "gcn_matruoc.docx", "per_page": 1}
-        }
-        self.setup_ui()
-
-    def setup_ui(self):
-        header = ctk.CTkFrame(self, fg_color="#1f538d", height=100, corner_radius=0)
-        header.pack(fill="x", side="top")
-        ctk.CTkLabel(header, text=f"VDC SYSTEM {self.version} - PHIÊN BẢN PHÂN PHỐI BETA", 
-                     font=("Arial", 26, "bold"), text_color="white").pack(pady=20)
-
-        main = ctk.CTkFrame(self, fg_color="transparent")
-        main.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        left = ctk.CTkFrame(main, width=320)
-        left.pack(side="left", fill="y", padx=(0, 15))
-        
-        ctk.CTkButton(left, text="1. NẠP EXCEL (DÒNG 10+)", height=45, fg_color="#3498db", command=self.load_ex).pack(pady=10, padx=20, fill="x")
-        self.lbl_ex = ctk.CTkLabel(left, text="Chưa có dữ liệu", font=("Arial", 11), text_color="gray"); self.lbl_ex.pack()
-
-        ctk.CTkLabel(left, text="2. CHỌN LOẠI PHÔI:", font=("Arial", 12, "bold")).pack(pady=(20,5), padx=20, anchor="w")
-        self.cb_type = ctk.CTkComboBox(left, values=list(self.card_configs.keys()), width=260); self.cb_type.pack(pady=5, padx=20)
-
-        ctk.CTkLabel(left, text="Tên Công ty (Ô A3):", font=("Arial", 12, "bold")).pack(pady=(20,5), padx=20, anchor="w")
-        self.ent_cpn = ctk.CTkEntry(left, width=260); self.ent_cpn.pack(pady=5, padx=20)
-        
-        ctk.CTkLabel(left, text="Mã số thuế (Ô A4):", font=("Arial", 12, "bold")).pack(pady=(5,5), padx=20, anchor="w")
-        self.lbl_mst = ctk.CTkLabel(left, text="---", font=("Consolas", 14, "bold"), text_color="#e67e22")
-        self.lbl_mst.pack(padx=20, anchor="w")
-
-        self.btn_run_all = ctk.CTkButton(left, text="🚀 XỬ LÝ TOÀN BỘ", fg_color="#27ae60", height=65, font=("Arial", 18, "bold"), command=self.run_all)
-        self.btn_run_all.pack(side="bottom", pady=30, padx=20, fill="x")
-        
-        self.lbl_status = ctk.CTkLabel(left, text="Hệ thống đã kết nối bảo mật...", font=("Arial", 11, "italic"), text_color="#2980b9")
-        self.lbl_status.pack(side="bottom", pady=0)
-
-        right = ctk.CTkFrame(main)
-        right.pack(side="right", fill="both", expand=True)
-        cols = ("Nhóm", "Họ Tên", "Phái", "Ngày Sinh", "Quốc Tịch", "Công Việc", "CCCD", "Nội Dung")
-        self.tree = ttk.Treeview(right, columns=cols, show='headings')
-        for col in cols:
-            self.tree.heading(col, text=col.upper()); self.tree.column(col, width=100, anchor="center")
-        self.tree.pack(fill="both", expand=True)
-
-    def load_ex(self):
-        f = filedialog.askopenfilename(filetypes=[("Excel", "*.xlsx")])
-        if f:
-            self.paths["ex"] = f
-            self.lbl_ex.configure(text=os.path.basename(f), text_color="#2ecc71")
-            for i in self.tree.get_children(): self.tree.delete(i)
-            self.students = []; self.img_cache = {}
-            try:
-                df = pd.read_excel(f, header=None)
-                self.ent_cpn.delete(0, 'end'); self.ent_cpn.insert(0, str(df.iloc[2, 0]).replace("Công ty:", "").strip().upper())
-                self.mst = re.sub(r'[^0-9]', '', str(df.iloc[3, 0]))
-                if not self.mst: self.mst = "MST_TRONG"
-                self.lbl_mst.configure(text=self.mst)
-
-                raw_a6 = str(df.iloc[5, 0])
-                dates = re.findall(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', raw_a6)
-                self.tu_ngay = dates[0] if len(dates) > 0 else "..."
-                self.den_ngay = dates[1] if len(dates) > 1 else "..."
-
-                current_group = "---"
-                for r in range(9, len(df)):
-                    colA = str(df.iloc[r, 0]).strip()
-                    name = str(df.iloc[r, 1]).strip()
-                    if "Nhóm" in colA: current_group = colA.split(":")[0].strip()
-                    if name and name.lower() != "nan" and not any(k in name.lower() for k in ["giám đốc", "người lập"]):
-                        cccd = re.sub(r'\s+', '', str(df.iloc[r, 6])).split(".")[0]
-                        s = {"r": r + 1, "group": current_group, "name": name, "cccd": cccd, 
-                             "gender": str(df.iloc[r, 2]), "dob": str(df.iloc[r, 3]),
-                             "nation": str(df.iloc[r, 4]), "job": str(df.iloc[r, 5]), "content": str(df.iloc[r, 7])}
-                        self.students.append(s)
-                        self.tree.insert("", "end", values=(s["group"], s["name"], s["gender"], s["dob"], s["nation"], s["job"], s["cccd"], s["content"]))
-            except Exception as e: messagebox.showerror("Lỗi", str(e))
-
-    def update_ui_status(self, text, btn_state="disabled"):
-        self.lbl_status.configure(text=text)
-        self.btn_run_all.configure(state=btn_state)
-
-    def run_all(self):
-        if not self.students or not self.paths["ex"]: return
-        cfg = self.card_configs[self.cb_type.get()]
-        if not os.path.exists(cfg["file"]): messagebox.showerror("VDC", f"Thiếu phôi Word: {cfg['file']}"); return
-        threading.Thread(target=self.workflow_logic, args=(cfg,), daemon=True).start()
-
-    def workflow_logic(self, cfg):
-        try:
-            folder_name = f"{self.mst}_VDC_Data_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.paths["fo"] = os.path.join(os.getcwd(), folder_name)
-            os.makedirs(self.paths["fo"], exist_ok=True)
-            self.paths["wd"] = cfg["file"]
-            per_page = cfg["per_page"]
-
-            self.update_ui_status("Công đoạn 1 & 2: Bóc ảnh và đồng bộ Cloud...")
-            wb = load_workbook(self.paths["ex"], data_only=True)
-            ws = wb.active
-            for image in getattr(ws, '_images', []):
-                row_idx = image.anchor._from.row + 1
-                for s in self.students:
-                    if s["r"] == row_idx:
-                        p = os.path.join(self.paths["fo"], f"{s['cccd']}.jpg")
-                        try:
-                            raw = getattr(image, '_data', None)
-                            if raw is None and hasattr(image, 'ref'): raw = image.ref.read() if hasattr(image.ref, 'read') else image.ref
-                            if callable(raw): raw = raw()
-                            
-                            if isinstance(raw, bytes):
-                                with open(p, "wb") as f: f.write(raw)
-                                with Image.open(p) as im: im.resize((600, 800), Image.Resampling.LANCZOS).convert("RGB").save(p, "JPEG", quality=95)
-                            else:
-                                raw.resize((600, 800), Image.Resampling.LANCZOS).convert("RGB").save(p, "JPEG", quality=95)
-                            self.img_cache[s['cccd']] = p
-                        except: pass
-                        break
-
-            new_students = []
-            for s in self.students:
-                try:
-                    res = requests.get(f"{self.FIREBASE_URL}/Students/{s['cccd']}.json", timeout=10)
-                    if res.json() is None: new_students.append(s)
-                except: new_students.append(s)
-
-            if new_students:
-                upload_data = []
-                for s in new_students:
-                    fb_payload = {
-                        "name": s["name"], "group": s["group"], "gender": s["gender"], "dob": s["dob"], 
-                        "nation": s["nation"], "job": s["job"], "cccd": s["cccd"], "content": s["content"], 
-                        "mst": self.mst, "company": self.ent_cpn.get(), "timestamp": str(datetime.datetime.now())
-                    }
-                    requests.put(f"{self.FIREBASE_URL}/Students/{s['cccd']}.json", json=fb_payload, timeout=15)
-                    
-                    img_path = self.img_cache.get(s["cccd"])
-                    s_up = {"cccd": s["cccd"], "base64Img": ""}
-                    if img_path and os.path.exists(img_path):
-                        with open(img_path, "rb") as f: s_up["base64Img"] = base64.b64encode(f.read()).decode('utf-8')
-                    upload_data.append(s_up)
-
-                try: requests.post(self.APPSCRIPT_URL, json={"folderName": folder_name, "company": self.ent_cpn.get(), "mst": self.mst, "students": upload_data}, timeout=300)
-                except: pass
-                requests.patch(f"{self.FIREBASE_URL}/Companies/{self.mst}.json", json={"name": self.ent_cpn.get(), "last_update": str(datetime.datetime.now())})
-
-            self.update_ui_status("Công đoạn 3/3: Đang tạo File Word...")
-            today = datetime.datetime.now()
-            ngay_in_text = today.strftime("ngày %d tháng %m năm %Y")
-            ngay_in_short = today.strftime("%d/%m/%Y")
-            ngay_het_han = today.replace(year=today.year + 2).strftime("ngày %d tháng %m năm %Y")
-
-            if per_page > 1:
-                doc = DocxTemplate(self.paths["wd"])
-                pgs = []
-                for i in range(0, len(self.students), per_page):
-                    batch = self.students[i:i+per_page]
-                    ctx = {}
-                    for idx in range(per_page):
-                        n = idx + 1
-                        if idx < len(batch):
-                            s = batch[idx]
-                            p = self.img_cache.get(s["cccd"])
-                            ctx[f'Don_vi_{n}'] = self.ent_cpn.get()
-                            ctx[f'Photo_{n}'] = InlineImage(doc, p, width=Mm(20), height=Mm(30)) if p else ""
-                            ctx[f'CCCD_{n}'] = s["cccd"]
-                        else:
-                            for k in ['Don_vi', 'Photo', 'CCCD']: ctx[f'{k}_{n}'] = ""
-                    pgs.append(ctx)
-                doc.render({'pages': pgs}, jinja2.Environment(undefined=jinja2.DebugUndefined))
-                out_path = os.path.join(self.paths["fo"], f"VDC_THE_IN_{self.mst}.docx")
-                doc.save(out_path)
-                
-                self.update_ui_status("✅ HOÀN TẤT!", "normal")
-                messagebox.showinfo("VDC Thành công", f"Đã xuất file thẻ!\nLưu tại: {out_path}")
-                os.startfile(out_path)
-                
-            else:
-                gcn_students = []
-                for s in self.students:
-                    grp = str(s.get("group", "")).lower()
-                    if "nhóm 1" in grp or "nhóm 2" in grp or "nhóm 6" in grp:
-                        gcn_students.append(s)
-
-                if not gcn_students:
-                    self.update_ui_status("✅ HOÀN TẤT!", "normal")
-                    messagebox.showinfo("VDC Thông báo", "Không có học viên Nhóm 1, 2, 6. Đã bỏ qua xuất GCN.")
-                    return
-
-                gcn_folder = os.path.join(self.paths["fo"], f"GCN_IN_{self.mst}")
-                os.makedirs(gcn_folder, exist_ok=True)
-                
-                for index, s in enumerate(gcn_students):
-                    doc = DocxTemplate(self.paths["wd"])
-                    p = self.img_cache.get(s["cccd"])
-                    
-                    ctx = {
-                        'Don_vi': self.ent_cpn.get(),
-                        'Photo': InlineImage(doc, p, width=Mm(20), height=Mm(30)) if p else "",
-                        'CCCD': s["cccd"], 'Ma_the': s["cccd"], 'Ho_va_ten': s["name"],
-                        'Gioi_tinh': s["gender"], 'Sinh_ngay': s["dob"], 'Quoc_tich': s["nation"],
-                        'Cong_viec': s["job"], 'Nhom': s["group"], 'Tu_ngay': self.tu_ngay,
-                        'Den_ngay': self.den_ngay, 'Ngay_cap': ngay_in_text,
-                        'Thoi_han': ngay_het_han, 'Ngay_ky': ngay_in_short
-                    }
-                    doc.render(ctx, jinja2.Environment(undefined=jinja2.DebugUndefined))
-                    safe_name = re.sub(r'[\\/*?:"<>|]', "", s["name"]).replace(" ", "_")
-                    file_name = f"{index+1:03d}_{safe_name}_{s['cccd']}.docx"
-                    doc.save(os.path.join(gcn_folder, file_name))
-
-                self.update_ui_status("✅ HOÀN TẤT!", "normal")
-                messagebox.showinfo("VDC Thành công", f"Đã xuất xong {len(gcn_students)} GCN file rời!\nLưu tại:\n{gcn_folder}")
-                os.startfile(gcn_folder)
+        // Lắng nghe dữ liệu
+        db.ref('AccessControl').on('value', (snapshot) => {
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '';
             
-        except Exception as e:
-            self.update_ui_status("❌ Lỗi xử lý!", "normal")
-            messagebox.showerror("Lỗi", str(e))
+            const data = snapshot.val();
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Chưa có người dùng nào</td></tr>';
+                return;
+            }
 
-if __name__ == "__main__":
-    verify_launch_token() # KHÓA BẢO MẶT ĐƯỢC GỌI Ở ĐÂY
-    VDC_Professional_V195().mainloop()
+            for (let key in data) {
+                let user = data[key];
+                let statusText = user.allowed ? "<span style='color:green;font-weight:bold;'>Đang hoạt động</span>" : "<span style='color:red;font-weight:bold;'>Đã bị khóa</span>";
+                let btnClass = user.allowed ? "btn-block" : "btn-allow";
+                let btnText = user.allowed ? "Khóa ngay" : "Mở khóa";
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.email}</td>
+                    <td>${statusText}</td>
+                    <td><button class="btn-toggle ${btnClass}" onclick="toggleAccess('${key}', ${!user.allowed})">${btnText}</button></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+
+        // Hàm thay đổi quyền
+        window.toggleAccess = function(key, newStatus) {
+            db.ref('AccessControl/' + key).update({ allowed: newStatus })
+              .then(() => alert("Cập nhật quyền thành công!"))
+              .catch(err => alert("Lỗi: " + err.message));
+        }
+    </script>
+</body>
+</html>
