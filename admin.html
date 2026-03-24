@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Admin - Quản lý truy cập & Thống kê</title>
+    <title>VDC Admin - Quản lý truy cập & Thống kê V1.2</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -28,7 +28,6 @@
         .modal h3 { margin-top: 0; color: #2c3e50; }
         .modal-table th { background-color: #34495e; }
     </style>
-    <!-- Tích hợp Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
@@ -49,7 +48,6 @@
         </table>
     </div>
 
-    <!-- Cửa sổ hiển thị lịch sử sử dụng -->
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -70,26 +68,25 @@
     </div>
 
     <script>
-        // Cấu hình Firebase
+        // Cấu hình Firebase MỚI (vdcdaotao)
         const firebaseConfig = {
-            apiKey: "AIzaSyCzWjfcD5Dgq7V-i2izb9tKLR6QM6qWPQo",
-            authDomain: "tavietnam-78ae8.firebaseapp.com",
-            projectId: "tavietnam-78ae8",
-            storageBucket: "tavietnam-78ae8.firebasestorage.app",
-            messagingSenderId: "670121705534",
-            appId: "1:670121705534:web:1027ad98550573ad37116f"
+            apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
+            authDomain: "vdcdaotao-bb832.firebaseapp.com",
+            projectId: "vdcdaotao-bb832",
+            storageBucket: "vdcdaotao-bb832.firebasestorage.app",
+            messagingSenderId: "1033996249004",
+            appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
+            measurementId: "G-CJRQYVBQSW"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let usageData = {}; // Biến lưu trữ toàn bộ lịch sử dùng
+        let usageData = {}; 
 
-        // Lắng nghe dữ liệu Lịch sử sử dụng liên tục
         db.ref('UsageLogs').on('value', (snapshot) => {
             usageData = snapshot.val() || {};
         });
 
-        // Lắng nghe dữ liệu Quản lý tài khoản
         db.ref('AccessControl').on('value', (snapshot) => {
             const tbody = document.getElementById('user-table-body');
             tbody.innerHTML = '';
@@ -119,14 +116,12 @@
             }
         });
 
-        // Hàm thay đổi quyền (Khóa/Mở)
         window.toggleAccess = function(key, newStatus) {
             db.ref('AccessControl/' + key).update({ allowed: newStatus })
               .then(() => alert("Cập nhật quyền thành công!"))
               .catch(err => alert("Lỗi: " + err.message));
         }
 
-        // Hàm hiển thị Cửa sổ Lịch sử
         window.showHistory = function(safeEmail, emailStr) {
             const historyBody = document.getElementById('history-table-body');
             historyBody.innerHTML = '';
@@ -134,7 +129,6 @@
             
             if (usageData[safeEmail]) {
                 const sessions = usageData[safeEmail];
-                // Sắp xếp lịch sử mới nhất lên đầu
                 const sessionKeys = Object.keys(sessions).sort().reverse(); 
                 
                 sessionKeys.forEach(key => {
@@ -146,7 +140,7 @@
                     if (session.logout_time) {
                         logoutStr = new Date(session.logout_time).toLocaleString('vi-VN');
                         const diffMs = new Date(session.logout_time) - new Date(session.login_time);
-                        const diffMins = Math.round(diffMs / 60000); // Đổi ra phút
+                        const diffMins = Math.round(diffMs / 60000); 
                         if (diffMins < 1) duration = 'Dưới 1 phút';
                         else duration = diffMins + ' phút';
                     }
@@ -169,12 +163,10 @@
             document.getElementById('historyModal').style.display = 'block';
         }
 
-        // Hàm đóng cửa sổ
         window.closeModal = function() {
             document.getElementById('historyModal').style.display = 'none';
         }
 
-        // Bấm ra ngoài rìa để đóng cửa sổ
         window.onclick = function(event) {
             const modal = document.getElementById('historyModal');
             if (event.target == modal) {
