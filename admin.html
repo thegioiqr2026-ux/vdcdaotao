@@ -3,177 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Admin - Quản lý truy cập & Thống kê V1.3</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #3498db; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .btn-toggle { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s;}
-        .btn-allow { background-color: #2ecc71; }
-        .btn-allow:hover { background-color: #27ae60; }
-        .btn-block { background-color: #e74c3c; }
-        .btn-block:hover { background-color: #c0392b; }
-        .btn-history { background-color: #f39c12; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.3s;}
-        .btn-history:hover { background-color: #e67e22; }
-        
-        /* Giao diện Cửa sổ Lịch sử (Modal) */
-        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 85%; max-width: 800px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
-        .modal h3 { margin-top: 0; color: #2c3e50; }
-        .modal-table th { background-color: #34495e; }
-    </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <title>VDC Admin System - V3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-database-compat.js"></script>
 </head>
-<body>
-    <div class="container">
-        <h2>BẢNG ĐIỀU KHIỂN & THỐNG KÊ VDC SYSTEM</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Email Người Dùng</th>
-                    <th>Trạng thái truy cập</th>
-                    <th>Hành động (Click để điều khiển)</th>
-                </tr>
-            </thead>
-            <tbody id="user-table-body">
-                <tr><td colspan="3" style="text-align: center;">Đang tải dữ liệu từ máy chủ...</td></tr>
-            </tbody>
-        </table>
-    </div>
+<body class="bg-gray-100 font-sans">
 
-    <div id="historyModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3 id="modal-title">Lịch sử sử dụng</h3>
-            <table class="modal-table">
+    <div class="container mx-auto px-4 py-8">
+        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-sm">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-700">VDC SYSTEM ADMIN</h1>
+                <p class="text-gray-500">Quản lý nhân viên & Phê duyệt truy cập</p>
+            </div>
+            <div class="text-right text-sm text-gray-400">Version 3.0</div>
+        </header>
+
+        <!-- BẢNG DANH SÁCH NHÂN VIÊN -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="min-w-full leading-normal">
                 <thead>
                     <tr>
-                        <th>Giờ mở phần mềm</th>
-                        <th>Giờ tắt phần mềm</th>
-                        <th>Thời lượng dùng</th>
-                        <th>Trạng thái</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Họ và Tên</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Điều khiển</th>
                     </tr>
                 </thead>
-                <tbody id="history-table-body">
+                <tbody id="user-table-body">
+                    <!-- Dữ liệu sẽ đổ vào đây từ Firebase -->
+                    <tr>
+                        <td colspan="4" class="px-5 py-5 text-center text-gray-500">Đang tải danh sách...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // Cấu hình Firebase MỚI CÓ DATABASE URL
+        // CẤU HÌNH FIREBASE CỦA ANH CÔNG ĐẸP
         const firebaseConfig = {
-            apiKey: "AIzaSyDC8A3PJ7D05SFdo6FT8Y1XbhLALJWK5Mk",
-            authDomain: "vdcdaotao-bb832.firebaseapp.com",
-            databaseURL: "https://vdcdaotao-bb832-default-rtdb.firebaseio.com",
-            projectId: "vdcdaotao-bb832",
-            storageBucket: "vdcdaotao-bb832.firebasestorage.app",
-            messagingSenderId: "1033996249004",
-            appId: "1:1033996249004:web:fa07039eb5c08d5ac43c09",
-            measurementId: "G-CJRQYVBQSW"
+            apiKey: "AIzaSyCzWjfcD5Dgq7V-i2izb9tKLR6QM6qWPQo",
+            authDomain: "tavietnam-78ae8.firebaseapp.com",
+            projectId: "tavietnam-78ae8",
+            storageBucket: "tavietnam-78ae8.firebasestorage.app",
+            messagingSenderId: "670121705534",
+            appId: "1:670121705534:web:1027ad98550573ad37116f"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let usageData = {}; 
-
-        db.ref('UsageLogs').on('value', (snapshot) => {
-            usageData = snapshot.val() || {};
-        });
-
-        db.ref('AccessControl').on('value', (snapshot) => {
-            const tbody = document.getElementById('user-table-body');
-            tbody.innerHTML = '';
+        // Hàm lấy danh sách người dùng
+        function loadUsers() {
+            const userTable = document.getElementById('user-table-body');
             
-            const data = snapshot.val();
-            if (!data) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Chưa có người dùng nào</td></tr>';
-                return;
-            }
+            db.ref('AccessControl').on('value', (snapshot) => {
+                userTable.innerHTML = '';
+                const data = snapshot.val();
 
-            for (let key in data) {
-                let user = data[key];
-                let statusText = user.allowed ? "<span style='color:green;font-weight:bold;'>Đang được phép dùng</span>" : "<span style='color:red;font-weight:bold;'>Đã bị Khóa</span>";
-                let btnClass = user.allowed ? "btn-block" : "btn-allow";
-                let btnText = user.allowed ? "Khóa tài khoản" : "Mở khóa";
+                if (!data) {
+                    userTable.innerHTML = '<tr><td colspan="4" class="px-5 py-5 text-center">Chưa có nhân viên nào đăng ký.</td></tr>';
+                    return;
+                }
 
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${user.email}</b></td>
-                    <td>${statusText}</td>
-                    <td>
-                        <button class="btn-toggle ${btnClass}" onclick="toggleAccess('${key}', ${!user.allowed})">🔒 ${btnText}</button>
-                        <button class="btn-history" onclick="showHistory('${key}', '${user.email}')">📊 Xem lịch sử</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            }
-        });
+                Object.keys(data).forEach(key => {
+                    const user = data[key];
+                    const safeEmail = key; // Email đã replace dấu chấm
+                    const isAllowed = user.allowed;
 
-        window.toggleAccess = function(key, newStatus) {
-            db.ref('AccessControl/' + key).update({ allowed: newStatus })
-              .then(() => alert("Cập nhật quyền thành công!"))
-              .catch(err => alert("Lỗi: " + err.message));
-        }
-
-        window.showHistory = function(safeEmail, emailStr) {
-            const historyBody = document.getElementById('history-table-body');
-            historyBody.innerHTML = '';
-            document.getElementById('modal-title').innerText = 'Thống kê phiên làm việc của: ' + emailStr;
-            
-            if (usageData[safeEmail]) {
-                const sessions = usageData[safeEmail];
-                const sessionKeys = Object.keys(sessions).sort().reverse(); 
-                
-                sessionKeys.forEach(key => {
-                    const session = sessions[key];
-                    let loginStr = session.login_time ? new Date(session.login_time).toLocaleString('vi-VN') : 'Lỗi';
-                    let logoutStr = '---';
-                    let duration = '---';
-                    
-                    if (session.logout_time) {
-                        logoutStr = new Date(session.logout_time).toLocaleString('vi-VN');
-                        const diffMs = new Date(session.logout_time) - new Date(session.login_time);
-                        const diffMins = Math.round(diffMs / 60000); 
-                        if (diffMins < 1) duration = 'Dưới 1 phút';
-                        else duration = diffMins + ' phút';
-                    }
-                    
-                    let statusBadge = session.status === 'Đang dùng' ? '<span style="color:#3498db;font-weight:bold;">Đang online</span>' : '<span style="color:#7f8c8d;">Đã tắt</span>';
-
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${loginStr}</td>
-                        <td>${logoutStr}</td>
-                        <td><b>${duration}</b></td>
-                        <td>${statusBadge}</td>
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap font-bold">${user.name || 'N/A'}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-600 whitespace-no-wrap">${user.email}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                                ${isAllowed 
+                                    ? '<span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight"><span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span><span class="relative text-xs">ĐÃ DUYỆT</span></span>' 
+                                    : '<span class="relative inline-block px-3 py-1 font-semibold text-orange-900 leading-tight"><span aria-hidden class="absolute inset-0 bg-orange-200 opacity-50 rounded-full"></span><span class="relative text-xs">CHỜ DUYỆT</span></span>'}
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                                <button onclick="toggleAccess('${safeEmail}', ${isAllowed})" 
+                                    class="${isAllowed ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white font-bold py-2 px-4 rounded text-xs transition duration-200">
+                                    ${isAllowed ? 'KHÓA' : 'PHÊ DUYỆT'}
+                                </button>
+                            </td>
+                        </tr>
                     `;
-                    historyBody.appendChild(tr);
+                    userTable.innerHTML += row;
                 });
-            } else {
-                historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có lịch sử sử dụng phần mềm</td></tr>';
-            }
+            });
+        }
+
+        // Hàm Phê duyệt / Khóa tài khoản
+        function toggleAccess(safeEmail, currentStatus) {
+            const newStatus = !currentStatus;
+            const action = newStatus ? "Phê duyệt" : "Khóa";
             
-            document.getElementById('historyModal').style.display = 'block';
-        }
-
-        window.closeModal = function() {
-            document.getElementById('historyModal').style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('historyModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
+            if(confirm(`Anh có chắc chắn muốn ${action} tài khoản này không?`)) {
+                db.ref('AccessControl/' + safeEmail).update({
+                    allowed: newStatus
+                }).then(() => {
+                    console.log("Cập nhật thành công");
+                }).catch((error) => {
+                    alert("Lỗi: " + error.message);
+                });
             }
         }
+
+        // Chạy hàm khi trang web tải xong
+        window.onload = loadUsers;
     </script>
 </body>
 </html>
